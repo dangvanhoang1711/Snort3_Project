@@ -1,0 +1,34 @@
+version: '3.8'
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    container_name: minisoc_backend
+    ports:
+      - "4000:4000"
+    environment:
+      - API_KEY=demo-key
+      - DB_PATH=/data/alerts.db
+      - NODE_ENV=production
+    volumes:
+      - ../backend-data:/data
+    networks:
+      - soc-network
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/frontend.Dockerfile
+    container_name: minisoc_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    # No build-time/backend env baked in: use same-origin and nginx proxy to reach backend
+    networks:
+      - soc-network
+
+networks:
+  soc-network:
+    driver: bridge
