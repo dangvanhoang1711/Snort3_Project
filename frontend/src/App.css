@@ -1,0 +1,33 @@
+/* Màu nền chủ đạo cực tối */
+body {
+  background-color: #0b0e14;
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.dashboard-container {
+  background-color: #0b0e14;
+  min-height: 100vh;
+  color: #e0e0e0;
+}
+
+/* Tùy chỉnh các thẻ Card cho giống mẫu */
+.custom-card {
+  background-color: #161b22 !important;
+  border: 1px solid #30363d !important;
+  border-radius: 12px !important;
+  transition: transform 0.2s;
+}
+
+.custom-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Tùy chỉnh bảng */
+.table {
+  color: #c9d1d9 !important;
+}
+
+.table-dark {
+  background-color: #161b22 !important;
+}
