@@ -11,8 +11,16 @@ services:
       - API_KEY=demo-key
       - DB_PATH=/data/alerts.db
       - NODE_ENV=production
+      - SNORT_MODE=${SNORT_MODE:-file}
+      - SNORT_API_URL=http://localhost:4000/api/ingest
+      - SNORT_BATCH_INTERVAL=100
+      - SNORT_MAX_QUEUE_SIZE=10000
+      - SNORT_DROP_LOW_SEVERITY=true
     volumes:
       - ../backend-data:/data
+      - C:/SnortLogsData:/app/snort-logs
+    command: >
+      sh -c "node tools/stream-forwarder.js & node index.js"
     networks:
       - soc-network
 

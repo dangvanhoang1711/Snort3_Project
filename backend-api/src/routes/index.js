@@ -21,35 +21,52 @@ router.get('/stats/overview', async (req, res) => {
   try {
     const db = require('../db').getDb()
 
-    // Tổng cảnh báo (tất cả alerts trong DB)
-    const total = await db.get(`SELECT COUNT(*) as c FROM alerts`)
+    // Tổng cảnh báo (từ aggregated table - sum of counts)
+    const totalAgg = await db.get(`SELECT SUM(count) as c FROM alerts_aggregated`)
 
-    // Tổng tấn công hôm nay - CHỈ tính drop và alert (2 action chính thức của Snort3)
-    const todayAttacks = await db.get(`SELECT COUNT(*) as c FROM alerts WHERE date(created_at)=date('now') AND action = 'drop'`)
+    // Tổng tấn công hôm nay (từ aggregated - drop action)
+    const todayStart = Math.floor(Date.now() / 86400000) * 86400000
+    const todayAttacks = await db.get(
+      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND action = 'drop'`,
+      [todayStart]
+    )
 
-    // Tổng alerts hôm nay (bao gồm cả alert - phát hiện nhưng không chặn)
-    const todayAlerts = await db.get(`SELECT COUNT(*) as c FROM alerts WHERE date(created_at)=date('now') AND action IN ('drop', 'alert')`)
+    // Tổng alerts hôm nay (drop + alert)
+    const todayAlerts = await db.get(
+      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND action IN ('drop', 'alert')`,
+      [todayStart]
+    )
 
     // Hôm qua - tấn công
-    const yesterdayAttacks = await db.get(`SELECT COUNT(*) as c FROM alerts WHERE date(created_at)=date('now','-1 day') AND action = 'drop'`)
+    const yesterdayStart = todayStart - 86400000
+    const yesterdayAttacks = await db.get(
+      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND last_seen < ? AND action = 'drop'`,
+      [yesterdayStart, todayStart]
+    )
 
-    // IP tấn công hôm nay (unique src_ip có action = drop)
-    const bySrc = await db.all(`SELECT src_ip, COUNT(*) as c FROM alerts WHERE date(created_at)=date('now') AND action = 'drop' GROUP BY src_ip ORDER BY c DESC`)
+    // IP tấn công hôm nay (unique src_ip)
+    const bySrc = await db.all(
+      `SELECT src_ip, SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND action = 'drop' GROUP BY src_ip ORDER BY c DESC`,
+      [todayStart]
+    )
 
-    // Tổng rules Snort3 (giả lập - trong thực tế nên đọc từ snort.conf)
-    const totalRules = 15
+    // Tổng rules - đếm từ aggregated
+    const rulesCount = await db.get(`SELECT COUNT(DISTINCT attack_type) as c FROM alerts_aggregated`)
+    const totalRules = rulesCount ? Math.max(rulesCount.c, 8) : 8
 
-    // Tính % so với hôm qua (dựa trên attacks thực sự = drop)
+    // Tính % so với hôm qua
+    const todayCount = todayAttacks?.c || 0
+    const yesterdayCount = yesterdayAttacks?.c || 0
     let pct = 0
-    if (yesterdayAttacks && yesterdayAttacks.c > 0) {
-      pct = Math.round(((todayAttacks.c - yesterdayAttacks.c) / yesterdayAttacks.c) * 100)
+    if (yesterdayCount > 0) {
+      pct = Math.round(((todayCount - yesterdayCount) / yesterdayCount) * 100)
     }
 
     res.json({
-      total: total.c,
-      today: todayAttacks.c,        // Tổng tấn công bị chặn (drop)
-      today_alerts: todayAlerts.c,  // Tổng alerts (drop + alert)
-      yesterday: yesterdayAttacks.c,
+      total: totalAgg?.c || 0,
+      today: todayCount,
+      today_alerts: todayAlerts?.c || 0,
+      yesterday: yesterdayCount,
       percent_change: pct,
       attacker_ips: bySrc.length,
       active_rules: totalRules,

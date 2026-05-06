@@ -7,6 +7,7 @@ const logger = require('./src/utils/logger')
 const routes = require('./src/routes')
 const { initDb } = require('./src/db')
 const errorHandler = require('./src/middleware/errorHandler')
+const { aggregator } = require('./src/services/aggregator')
 
 const http = require('http')
 const realtime = require('./src/realtime')
@@ -42,6 +43,7 @@ app.use(errorHandler)
 const start = async () => {
   try {
     await initDb()
+    aggregator.start()
     const server = http.createServer(app)
     // initialize realtime (socket.io)
     realtime.init(server, { cors: { origin: '*' } })

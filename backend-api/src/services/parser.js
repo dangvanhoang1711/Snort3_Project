@@ -6,10 +6,19 @@ const sidMap = require('./sid-map')
  * Parse Snort alert_csv content into array of alert objects
  * Snort format: timestamp,pkt_num,proto,pkt_gen,pkt_len,dir,src_ap,dst_ap,rule,action
  * Example: 05/05-18:53:32.544461,12121,TCP,raw,44,C2S,192.168.1.2:55892,192.168.2.2:3404,1:1000001:1,drop
+ * 
+ * Simplified format (from stream-forwarder):
+ * src_ip,dst_ip,dst_port,attack_type,severity,action,proto,count
  */
 function parseAlertCsv(text) {
   const records = parse(text, { columns: false, trim: true, skip_empty_lines: true })
   const alerts = []
+
+  // Check if simplified format
+  const firstRecord = records[0]
+  if (firstRecord && firstRecord.length >= 6 && !firstRecord[0]?.includes('/')) {
+    return parseSimplifiedFormat(records)
+  }
 
   function normalizeTimestamp(ts) {
     if (!ts) return null
@@ -21,7 +30,8 @@ function parseAlertCsv(text) {
       const year = new Date().getFullYear()
       const month = m[1].padStart(2, '0')
       const day = m[2].padStart(2, '0')
-      const time = m[3]
+      const timeParts = m[3].split('.')
+      const time = timeParts[0]
       return `${year}-${month}-${day} ${time}`
     }
 
@@ -128,6 +138,27 @@ function parseRuleField(field) {
 function tryParseInt(v) {
   const n = parseInt(v, 10)
   return Number.isNaN(n) ? null : n
+}
+
+function parseSimplifiedFormat(records) {
+  const alerts = []
+  for (const row of records) {
+    if (!Array.isArray(row) || row.length < 6) continue
+
+    const [src_ip, dst_ip, dst_port, attack_type, severity, action, proto, count] = row
+
+    alerts.push({
+      src_ip: src_ip?.trim() || null,
+      dst_ip: dst_ip?.trim() || null,
+      dst_port: dst_port?.trim() || null,
+      attack_type: attack_type?.trim() || 'Unknown',
+      severity: severity?.trim() || 'medium',
+      action: action?.trim() || 'alert',
+      proto: proto?.trim() || 'TCP',
+      count: parseInt(count?.trim() || '1', 10),
+    })
+  }
+  return alerts
 }
 
 module.exports = { parseAlertCsv, parseRuleField }

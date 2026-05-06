@@ -1,10 +1,10 @@
 const { parseAlertCsv } = require('./parser')
-const { insertAlert } = require('../models/alerts')
+const { aggregator } = require('./aggregator')
 const logger = require('../utils/logger')
 const Joi = require('joi')
 
 const payloadSchema = Joi.object({
-  data: Joi.string().required(), // CSV payload as text
+  data: Joi.string().required(),
 })
 
 async function ingestCsvPayload(payload) {
@@ -16,16 +16,13 @@ async function ingestCsvPayload(payload) {
   }
 
   const alerts = parseAlertCsv(payload.data)
-  const results = []
-  for (const a of alerts) {
-    try {
-      const res = await insertAlert(a)
-      results.push({ id: res.id, timestamp: a.timestamp })
-    } catch (err) {
-      logger.error('Failed to insert alert', err)
-    }
+  const result = aggregator.processAlerts(alerts)
+
+  return {
+    processed: alerts.length,
+    new_groups: result.newGroups,
+    buffered: result.buffered
   }
-  return { inserted: results.length, details: results }
 }
 
 module.exports = { ingestCsvPayload }
