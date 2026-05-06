@@ -20,39 +20,51 @@ const { getStats } = require('../models/alerts')
 router.get('/stats/overview', async (req, res) => {
   try {
     const db = require('../db').getDb()
+    const todayStart = Math.floor(Date.now() / 86400000) * 86400000
 
-    // Tổng cảnh báo (từ aggregated table - sum of counts)
+    // Tổng tất cả events (bao gồm allow + drop - SOC logs everything)
     const totalAgg = await db.get(`SELECT SUM(count) as c FROM alerts_aggregated`)
 
-    // Tổng tấn công hôm nay (từ aggregated - drop action)
-    const todayStart = Math.floor(Date.now() / 86400000) * 86400000
+    // Tổng tấn công hôm nay - CHỈ tính HIGH severity + DROP action (thực sự nguy hiểm)
     const todayAttacks = await db.get(
-      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND action = 'drop'`,
+      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND severity = 'high' AND action = 'drop'`,
       [todayStart]
     )
 
-    // Tổng alerts hôm nay (drop + alert)
-    const todayAlerts = await db.get(
-      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND action IN ('drop', 'alert')`,
+    // Tổng traffic hôm nay (tất cả events)
+    const todayTraffic = await db.get(
+      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ?`,
+      [todayStart]
+    )
+
+    // Allowed traffic hôm nay
+    const todayAllowed = await db.get(
+      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND action = 'allow'`,
+      [todayStart]
+    )
+
+    // Blocked traffic hôm nay
+    const todayBlocked = await db.get(
+      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND action = 'drop'`,
       [todayStart]
     )
 
     // Hôm qua - tấn công
     const yesterdayStart = todayStart - 86400000
     const yesterdayAttacks = await db.get(
-      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND last_seen < ? AND action = 'drop'`,
+      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND last_seen < ? AND severity = 'high' AND action = 'drop'`,
       [yesterdayStart, todayStart]
     )
 
-    // IP tấn công hôm nay (unique src_ip)
+    // IP tấn công hôm nay (unique IPs với high severity attacks)
     const bySrc = await db.all(
-      `SELECT src_ip, SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND action = 'drop' GROUP BY src_ip ORDER BY c DESC`,
+      `SELECT src_ip, SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND severity = 'high' AND action = 'drop' GROUP BY src_ip ORDER BY c DESC`,
       [todayStart]
     )
 
-    // Tổng rules - đếm từ aggregated
-    const rulesCount = await db.get(`SELECT COUNT(DISTINCT attack_type) as c FROM alerts_aggregated`)
-    const totalRules = rulesCount ? Math.max(rulesCount.c, 8) : 8
+    // Tổng rules
+    const rulesCount = await db.get(`SELECT COUNT(DISTINCT attack_type) as c FROM alerts_aggregated WHERE severity = 'high'`)
+    const totalRules = rulesCount ? Math.max(rulesCount.c, 7) : 7
 
     // Tính % so với hôm qua
     const todayCount = todayAttacks?.c || 0
@@ -63,9 +75,11 @@ router.get('/stats/overview', async (req, res) => {
     }
 
     res.json({
-      total: totalAgg?.c || 0,
-      today: todayCount,
-      today_alerts: todayAlerts?.c || 0,
+      total: totalAgg?.c || 0,                    // Tổng tất cả events (allow + drop)
+      today: todayCount,                          // Tổng attacks (high + drop)
+      today_alerts: todayTraffic?.c || 0,         // Tổng traffic hôm nay
+      today_allowed: todayAllowed?.c || 0,        // Allowed traffic
+      today_blocked: todayBlocked?.c || 0,       // Blocked traffic
       yesterday: yesterdayCount,
       percent_change: pct,
       attacker_ips: bySrc.length,
@@ -92,14 +106,17 @@ router.get('/stats/hourly', async (req, res) => {
   try {
     const db = require('../db').getDb()
     const results = []
+    const now = Date.now()
     
     for (let i = 0; i < 24; i++) {
-      const hour = i.toString().padStart(2, '0')
+      const hourStart = now - (i * 3600000)
+      const hourEnd = hourStart + 3600000
       const row = await db.get(
-        `SELECT COUNT(*) as count FROM alerts WHERE timestamp LIKE ?`,
-        [`%${hour}:%`]
+        `SELECT SUM(count) as count FROM alerts_aggregated WHERE last_seen >= ? AND last_seen < ?`,
+        [hourEnd - 3600000, hourEnd]
       )
-      results.push({ hour: `${hour}:00`, count: row?.count || 0 })
+      const hourLabel = new Date(hourStart).getHours().toString().padStart(2, '0')
+      results.unshift({ hour: `${hourLabel}:00`, count: row?.count || 0 })
     }
     
     res.json(results)

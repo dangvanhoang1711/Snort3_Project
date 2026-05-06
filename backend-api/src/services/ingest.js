@@ -20,7 +20,6 @@ async function ingestCsvPayload(payload) {
 
   return {
     processed: alerts.length,
-    new_groups: result.newGroups,
     buffered: result.buffered
   }
 }

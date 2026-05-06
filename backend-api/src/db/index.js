@@ -58,7 +58,7 @@ async function migrate(dbInstance) {
   await dbInstance.exec(`CREATE INDEX IF NOT EXISTS idx_alerts_dst_ip ON alerts(dst_ip);`)
   await dbInstance.exec(`CREATE INDEX IF NOT EXISTS idx_alerts_attack_type ON alerts(attack_type);`)
 
-  // aggregated alerts table (high-throughput)
+// aggregated alerts table (high-throughput)
   await dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS alerts_aggregated (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,6 +66,7 @@ async function migrate(dbInstance) {
       dst_ip TEXT NOT NULL,
       dst_port INTEGER,
       attack_type TEXT NOT NULL,
+      rule_sid INTEGER,
       severity TEXT,
       action TEXT,
       proto TEXT,
@@ -76,7 +77,7 @@ async function migrate(dbInstance) {
     );
   `)
 
-  await dbInstance.exec(`CREATE INDEX IF NOT EXISTS idx_agg_group ON alerts_aggregated(src_ip, dst_ip, dst_port, attack_type);`)
+  await dbInstance.exec(`CREATE INDEX IF NOT EXISTS idx_agg_group ON alerts_aggregated(src_ip, dst_ip, attack_type);`)
   await dbInstance.exec(`CREATE INDEX IF NOT EXISTS idx_agg_last_seen ON alerts_aggregated(last_seen);`)
 }
 

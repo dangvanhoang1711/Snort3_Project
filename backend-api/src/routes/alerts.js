@@ -16,7 +16,11 @@ const ingestRateLimiter = rateLimit({
 
 async function listAlertsHandler(req, res) {
   const limit = parseInt(req.query.limit || '20', 10)
-  const offset = parseInt(req.query.offset || '0', 10)
+  let offset = 0
+  if (req.query.offset !== undefined && req.query.offset !== null && req.query.offset !== '') {
+    offset = parseInt(req.query.offset, 10)
+    if (isNaN(offset)) offset = 0
+  }
   const search = req.query.search || ''
   const severity = req.query.severity || ''
   const action = req.query.action || ''

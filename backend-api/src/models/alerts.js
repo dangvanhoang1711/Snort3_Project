@@ -2,7 +2,9 @@ const { getDb } = require('../db')
 
 async function getAlerts({ limit = 20, offset = 0, search = '', severity = '', action = '', attackType = '', srcIp = '', dstIp = '' } = {}) {
   const db = getDb()
-  let query = 'SELECT * FROM alerts_aggregated WHERE 1=1'
+  let query = `SELECT id, src_ip, dst_ip, dst_port, attack_type, rule_sid, severity, action, proto, count, 
+    datetime(last_seen/1000, 'unixepoch') as timestamp, first_seen, last_seen 
+    FROM alerts_aggregated WHERE 1=1`
   const params = []
 
   if (search) {
@@ -50,10 +52,11 @@ async function getAlerts({ limit = 20, offset = 0, search = '', severity = '', a
 async function getStats() {
   const db = getDb()
   const byType = await db.all(`SELECT attack_type, SUM(count) as count FROM alerts_aggregated GROUP BY attack_type ORDER BY count DESC`)
+  const bySeverity = await db.all(`SELECT severity, SUM(count) as count FROM alerts_aggregated WHERE severity IS NOT NULL GROUP BY severity`)
   const bySrc = await db.all(`SELECT src_ip, SUM(count) as count FROM alerts_aggregated GROUP BY src_ip ORDER BY count DESC LIMIT 10`)
   const byDst = await db.all(`SELECT dst_ip, SUM(count) as count FROM alerts_aggregated GROUP BY dst_ip ORDER BY count DESC LIMIT 10`)
   const recent = await db.all(`SELECT attack_type, last_seen FROM alerts_aggregated ORDER BY last_seen DESC LIMIT 100`)
-  return { byType, bySrc, byDst, recent }
+  return { byType, bySeverity, bySrc, byDst, recent }
 }
 
 async function getAttackTypes() {

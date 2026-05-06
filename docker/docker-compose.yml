@@ -16,11 +16,12 @@ services:
       - SNORT_BATCH_INTERVAL=100
       - SNORT_MAX_QUEUE_SIZE=10000
       - SNORT_DROP_LOW_SEVERITY=true
+      - TZ=Asia/Ho_Chi_Minh
     volumes:
       - ../backend-data:/data
       - C:/SnortLogsData:/app/snort-logs
     command: >
-      sh -c "node tools/stream-forwarder.js & node index.js"
+      sh -c "node tools/snort-csv-forwarder.js & node index.js"
     networks:
       - soc-network
 

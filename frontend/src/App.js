@@ -272,22 +272,24 @@ function App() {
       });
     }
 
-    const severityCounts = { High: 0, Medium: 0, Low: 0 };
-    alertsList.forEach(a => {
-      const sev = (a.severity || '').toLowerCase();
-      if (sev === 'high' || sev === 'danger') severityCounts.High++;
-      else if (sev === 'medium' || sev === 'warning') severityCounts.Medium++;
-      else severityCounts.Low++;
-    });
-    setDonutChartData({
-      labels: ['Cao', 'Trung bình', 'Thấp'],
-      datasets: [{
-        data: [severityCounts.High, severityCounts.Medium, severityCounts.Low],
-        backgroundColor: [COLORS.red, COLORS.yellow, COLORS.green],
-        borderColor: '#1e293b',
-        borderWidth: 2
-      }]
-    });
+    if (stats && stats.bySeverity && stats.bySeverity.length > 0) {
+      const severityCounts = { high: 0, medium: 0, low: 0 };
+      stats.bySeverity.forEach(s => {
+        const sev = (s.severity || '').toLowerCase();
+        if (sev === 'high') severityCounts.high += s.count;
+        else if (sev === 'medium') severityCounts.medium += s.count;
+        else if (sev === 'low') severityCounts.low += s.count;
+      });
+      setDonutChartData({
+        labels: ['Cao', 'Trung bình', 'Thấp'],
+        datasets: [{
+          data: [severityCounts.high, severityCounts.medium, severityCounts.low],
+          backgroundColor: [COLORS.red, COLORS.yellow, COLORS.green],
+          borderColor: '#1e293b',
+          borderWidth: 2
+        }]
+      });
+    }
 
     if (stats && stats.bySrc && stats.bySrc.length > 0) {
       setTopIPs(stats.bySrc.slice(0, 10).map(item => ({
@@ -643,8 +645,8 @@ function App() {
             </div>
             <div className="stat-content">
               <span className="stat-label">Phát hiện đe dọa</span>
-              <span className="stat-value">{overview?.today_alerts?.toLocaleString() || overview?.today?.toLocaleString() || 0}</span>
-              <span className="stat-trend neutral">sự kiện drop + alert</span>
+              <span className="stat-value">{overview?.today?.toLocaleString() || 0}</span>
+              <span className="stat-trend neutral">sự kiện nguy hiểm bị chặn</span>
             </div>
           </div>
 
@@ -970,16 +972,8 @@ function App() {
                   <span className="ip-highlight">{selectedAlert.src_ip || '-'}</span>
                 </div>
                 <div className="detail-item">
-                  <label>Cổng nguồn</label>
-                  <span>{selectedAlert.src_port || '-'}</span>
-                </div>
-                <div className="detail-item">
                   <label>IP Đích</label>
                   <span className="ip-highlight">{selectedAlert.dst_ip || '-'}</span>
-                </div>
-                <div className="detail-item">
-                  <label>Cổng đích</label>
-                  <span>{selectedAlert.dst_port || '-'}</span>
                 </div>
                 <div className="detail-item">
                   <label>Giao thức</label>
@@ -1013,17 +1007,13 @@ function App() {
                         {badge.label}
                       </span>
                     );
-                  })()}
+})()}
                 </div>
-                <div className="detail-item">
-                  <label>Kích thước</label>
-                  <span>{selectedAlert.pkt_len || '-'} bytes</span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }

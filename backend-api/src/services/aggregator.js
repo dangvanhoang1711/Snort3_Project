@@ -1,6 +1,7 @@
 const { getDb } = require('../db')
 const realtime = require('../realtime')
 const logger = require('../utils/logger')
+const { getSidByAttackType } = require('./sid-map')
 
 const FLUSH_INTERVAL = 100
 
@@ -15,6 +16,10 @@ class AlertAggregator {
       upserted: 0,
       errors: 0
     }
+  }
+
+  getKey(entry) {
+    return `${entry.src_ip}:${entry.dst_ip}:${entry.attack_type}`
   }
 
   start() {
@@ -34,18 +39,30 @@ class AlertAggregator {
     for (const alert of alerts) {
       if (!alert.src_ip || !alert.attack_type) continue
       
-      this.buffer.push({
+      const rule_sid = getSidByAttackType(alert.attack_type)
+      
+      const entry = {
         src_ip: alert.src_ip,
         dst_ip: alert.dst_ip,
         dst_port: alert.dst_port,
         attack_type: alert.attack_type,
+        rule_sid: rule_sid,
         severity: alert.severity || 'medium',
         action: alert.action || 'alert',
         proto: alert.proto || 'TCP',
         count: alert.count || 1,
         first_seen: Date.now(),
         last_seen: Date.now(),
-      })
+      }
+
+      const key = this.getKey(entry)
+      const existing = this.buffer.find(b => this.getKey(b) === key)
+      if (existing) {
+        existing.count += entry.count
+        existing.last_seen = entry.last_seen
+      } else {
+        this.buffer.push(entry)
+      }
       this.stats.received++
     }
 
@@ -64,8 +81,8 @@ class AlertAggregator {
       for (const entry of batch) {
         const existing = await db.get(
           `SELECT id, count FROM alerts_aggregated 
-           WHERE src_ip = ? AND dst_ip = ? AND dst_port = ? AND attack_type = ?`,
-          [entry.src_ip, entry.dst_ip, entry.dst_port, entry.attack_type]
+           WHERE src_ip = ? AND dst_ip = ? AND attack_type = ?`,
+          [entry.src_ip, entry.dst_ip, entry.attack_type]
         )
 
         if (existing) {
@@ -78,10 +95,10 @@ class AlertAggregator {
         } else {
           await db.run(
             `INSERT INTO alerts_aggregated 
-             (src_ip, dst_ip, dst_port, attack_type, severity, action, proto, count, first_seen, last_seen) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             (src_ip, dst_ip, dst_port, attack_type, rule_sid, severity, action, proto, count, first_seen, last_seen) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-              entry.src_ip, entry.dst_ip, entry.dst_port, entry.attack_type,
+              entry.src_ip, entry.dst_ip, entry.dst_port, entry.attack_type, entry.rule_sid,
               entry.severity, entry.action, entry.proto, entry.count,
               entry.first_seen, entry.last_seen
             ]

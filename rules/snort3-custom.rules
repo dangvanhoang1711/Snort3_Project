@@ -1,0 +1,166 @@
+# ==========================================
+# Snort3 Custom Rules for Mini-SOC
+# SID mapping must match backend-api/src/services/sid-map.js
+# ==========================================
+
+# ---------------------------------------------------------
+# HIGH SEVERITY (Sid: 1000001-1000007)
+# ---------------------------------------------------------
+
+# 1000001 - SYN Scan Detected
+drop tcp any any -> $HOME_NET any (
+    msg:"SYN Scan Detected";
+    flags:S;
+    flow:stateless;
+    detection_filter:track by_src,count 20,seconds 3;
+    sid:1000001;
+    rev:1;
+)
+
+# 1000002 - NULL Scan Detected
+drop tcp any any -> $HOME_NET any (
+    msg:"NULL Scan Detected";
+    flags:0;
+    flow:stateless;
+    sid:1000002;
+    rev:1;
+)
+
+# 1000003 - XMAS Scan Detected
+drop tcp any any -> $HOME_NET any (
+    msg:"XMAS Scan Detected";
+    flags:FPU;
+    flow:stateless;
+    sid:1000003;
+    rev:1;
+)
+
+# 1000004 - FIN Scan Detected
+drop tcp any any -> $HOME_NET any (
+    msg:"FIN Scan Detected";
+    flags:F;
+    flow:stateless;
+    sid:1000004;
+    rev:1;
+)
+
+# 1000005 - Stealth Scan Detected
+drop tcp any any -> $HOME_NET any (
+    msg:"Stealth Scan Detected";
+    flags:SF;
+    flow:stateless;
+    sid:1000005;
+    rev:1;
+)
+
+# 1000006 - SYN Flood Detected
+drop tcp any any -> $HOME_NET any (
+    msg:"SYN Flood Detected";
+    flags:S;
+    flow:stateless;
+    detection_filter:track by_src,count 50,seconds 1;
+    sid:1000006;
+    rev:1;
+)
+
+# 1000007 - Port Scan Detected
+drop tcp any any -> $HOME_NET any (
+    msg:"Port Scan Detected";
+    flags:S;
+    flow:stateless;
+    detection_filter:track by_src,count 100,seconds 10;
+    sid:1000007;
+    rev:1;
+)
+
+# ---------------------------------------------------------
+# MEDIUM SEVERITY (Sid: 1000101-1000106)
+# ---------------------------------------------------------
+
+# 1000101 - ICMP Sweep Detected
+drop icmp any any -> $HOME_NET any (
+    msg:"ICMP Sweep Detected";
+    itype:8;
+    detection_filter:track by_src,count 30,seconds 5;
+    sid:1000101;
+    rev:1;
+)
+
+# 1000102 - ICMP Flood Detected
+drop icmp any any -> $HOME_NET any (
+    msg:"ICMP Flood Detected";
+    detection_filter:track by_src,count 50,seconds 1;
+    sid:1000102;
+    rev:1;
+)
+
+# 1000103 - UDP Flood Detected
+drop udp any any -> $HOME_NET any (
+    msg:"UDP Flood Detected";
+    detection_filter:track by_src,count 100,seconds 2;
+    sid:1000103;
+    rev:1;
+)
+
+# 1000104 - DNS Query Anomaly
+alert udp any any -> $HOME_NET 53 (
+    msg:"DNS Query Anomaly";
+    sid:1000104;
+    rev:1;
+)
+
+# 1000105 - ARP Spoofing Detected
+alert arp any any -> $HOME_NET any (
+    msg:"ARP Spoofing Detected";
+    sid:1000105;
+    rev:1;
+)
+
+# 1000106 - Ping of Death Detected
+drop icmp any any -> $HOME_NET any (
+    msg:"Ping of Death Detected";
+    icode:0;
+    itype:8;
+    sid:1000106;
+    rev:1;
+)
+
+# ---------------------------------------------------------
+# LOW SEVERITY (Sid: 1000100)
+# ---------------------------------------------------------
+
+# 1000100 - ICMP Ping Allowed
+pass icmp any any -> $HOME_NET any (
+    msg:"ICMP Ping Allowed";
+    itype:8;
+    sid:1000100;
+    rev:1;
+)
+
+# ==========================================
+# END OF RULES
+# ==========================================
+
+# ==========================================
+# SID Mapping Reference (must match sid-map.js):
+# 
+# HIGH:
+#   1000001 - SYN Scan Detected
+#   1000002 - NULL Scan Detected
+#   1000003 - XMAS Scan Detected
+#   1000004 - FIN Scan Detected
+#   1000005 - Stealth Scan Detected
+#   1000006 - SYN Flood Detected
+#   1000007 - Port Scan Detected
+#
+# MEDIUM:
+#   1000101 - ICMP Sweep Detected
+#   1000102 - ICMP Flood Detected
+#   1000103 - UDP Flood Detected
+#   1000104 - DNS Query Anomaly
+#   1000105 - ARP Spoofing Detected
+#   1000106 - Ping of Death Detected
+#
+# LOW:
+#   1000100 - ICMP Ping Allowed
+# ==========================================
