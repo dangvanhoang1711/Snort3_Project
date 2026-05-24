@@ -617,7 +617,7 @@ body::after {
   border-radius: 20px;
   padding: 22px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -681,7 +681,7 @@ body::after {
   justify-content: center;
   color: white;
   box-shadow: var(--card-glow);
-  animation: float 3s ease-in-out infinite;
+  flex: 0 0 48px;
 }
 
 @keyframes float {
@@ -693,6 +693,8 @@ body::after {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  justify-content: center;
+  min-height: 52px;
 }
 
 .stat-label {
@@ -1023,7 +1025,8 @@ body::after {
 
 .alerts-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   margin: 0;
   font-size: 14px;
 }
@@ -1079,6 +1082,7 @@ body::after {
 .alerts-table tbody td {
   padding: 14px 12px;
   border-bottom: 1px solid var(--border-color);
+  box-shadow: inset 0 -1px 0 rgba(148, 163, 184, 0.06);
   color: var(--text-secondary);
   vertical-align: middle;
 }
@@ -1132,6 +1136,31 @@ body::after {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 180px;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.attack-type-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding-bottom: 1px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.28);
+  line-height: 1.35;
+}
+
+.attack-type-value span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attack-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  min-width: 18px;
+  transform: translateY(-1px);
 }
 
 .sid-cell {

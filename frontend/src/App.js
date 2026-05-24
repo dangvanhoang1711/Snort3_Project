@@ -118,7 +118,8 @@ function App() {
     if (!mountedRef.current) return;
     setIsLoading(true);
     try {
-      const currentOffset = newOffset !== null ? newOffset : paginationRef.current.offset;
+      const requestedOffset = Number.isFinite(newOffset) ? newOffset : paginationRef.current.offset;
+      const currentOffset = Math.max(requestedOffset, 0);
       const filters = {
         search: searchTerm,
         severity: severityFilter,
@@ -220,12 +221,16 @@ function App() {
         ...prev,
         total: incoming.is_update ? prev.total : prev.total + 1
       }));
+      paginationRef.current = {
+        ...paginationRef.current,
+        total: incoming.is_update ? paginationRef.current.total : paginationRef.current.total + 1
+      };
       scheduleRealtimeRefresh();
     };
     socket.on('alert:new', handler);
 
     const interval = setInterval(() => {
-      if (mountedRef.current) fetchData(false);
+      if (mountedRef.current) fetchData(null);
     }, refreshInterval);
 
     return () => {
@@ -937,7 +942,10 @@ function App() {
                           <td className="dst-ip">{alert.dst_ip || '-'}</td>
                           <td className="protocol-col"><span className="proto-cell">{alert.proto || '-'}</span></td>
                           <td className="attack-type-cell">
-                            {getActionIcon(alert.action)} {alert.attack_type || alert.rule_msg || 'Unknown'}
+                            <span className="attack-type-value">
+                              <span className="attack-icon">{getActionIcon(alert.action)}</span>
+                              <span>{alert.attack_type || alert.rule_msg || 'Unknown'}</span>
+                            </span>
                           </td>
                           <td className="sid-cell">{alert.rule_sid || '-'}</td>
                           <td className="action-col">
