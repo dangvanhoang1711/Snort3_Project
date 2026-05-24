@@ -55,20 +55,20 @@ const colorArray = Object.values(COLORS);
 const PER_PAGE = 20;
 
 const ACTIONS = [
-  { value: '', label: 'Tất cả' },
-  { value: 'drop', label: 'Chặn (Drop)' },
-  { value: 'alert', label: 'Cảnh báo (Alert)' },
-  { value: 'pass', label: 'Bỏ qua (Pass)' },
-  { value: 'log', label: 'Ghi log (Log)' },
-  { value: 'reject', label: 'Từ chối (Reject)' },
+  { value: '', label: 'All Actions' },
+  { value: 'drop', label: 'Drop' },
+  { value: 'alert', label: 'Alert' },
+  { value: 'pass', label: 'Pass' },
+  { value: 'log', label: 'Log' },
+  { value: 'reject', label: 'Reject' },
   { value: 'sdrop', label: 'Silent Drop' }
 ];
 
 const SEVERITY_LEVELS = [
-  { value: '', label: 'Tất cả' },
-  { value: 'high', label: 'Cao' },
-  { value: 'medium', label: 'Trung bình' },
-  { value: 'low', label: 'Thấp' }
+  { value: '', label: 'All Severities' },
+  { value: 'high', label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low', label: 'Low' }
 ];
 
 function App() {
@@ -160,7 +160,7 @@ function App() {
 
       processCharts(alertsRes.results || [], statsRes, hourlyRes);
     } catch (e) {
-      console.error('Lỗi khi tải dữ liệu:', e);
+      console.error('Failed to load dashboard data:', e);
     } finally {
       if (mountedRef.current) setIsLoading(false);
     }
@@ -183,12 +183,12 @@ function App() {
 
     socket.on('connect', () => {
       setIsConnected(true);
-      console.log('Đã kết nối socket', socket.id);
+      console.log('Socket connected', socket.id);
     });
 
     socket.on('disconnect', () => {
       setIsConnected(false);
-      console.log('Mất kết nối socket');
+      console.log('Socket disconnected');
     });
 
     const handler = (alert) => {
@@ -241,7 +241,7 @@ function App() {
   useEffect(() => {
     getAttackTypes().then(types => {
       if (mountedRef.current) setAttackTypes(types);
-    }).catch(err => console.error('Lỗi khi tải loại tấn công:', err));
+    }).catch(err => console.error('Failed to load attack types:', err));
   }, []);
 
   function processCharts(alertsList, stats, hourlyData) {
@@ -277,7 +277,7 @@ function App() {
     setLineChartData({
       labels,
       datasets: [{
-        label: 'Số lượng tấn công',
+        label: 'Attack Volume',
         data,
         borderColor: COLORS.red,
         backgroundColor: 'rgba(239, 68, 68, 0.15)',
@@ -292,7 +292,7 @@ function App() {
     });
 
     if (stats && stats.byType && stats.byType.length > 0) {
-      const pieLabels = stats.byType.slice(0, 8).map(i => i.attack_type || 'Không xác định');
+      const pieLabels = stats.byType.slice(0, 8).map(i => i.attack_type || 'Unknown');
       const pieValues = stats.byType.slice(0, 8).map(i => i.count);
       setPieChartData({
         labels: pieLabels,
@@ -314,7 +314,7 @@ function App() {
         else if (sev === 'low') severityCounts.low += s.count;
       });
       setDonutChartData({
-        labels: ['Cao', 'Trung bình', 'Thấp'],
+        labels: ['High', 'Medium', 'Low'],
         datasets: [{
           data: [severityCounts.high, severityCounts.medium, severityCounts.low],
           backgroundColor: [COLORS.red, COLORS.yellow, COLORS.green],
@@ -335,7 +335,7 @@ function App() {
       setBarChartData({
         labels: topSrcLabels,
         datasets: [{
-          label: 'Số lần tấn công',
+          label: 'Attack Count',
           data: topSrcValues,
           backgroundColor: colorArray.slice(0, 8).map(c => c + '99'),
           borderColor: colorArray.slice(0, 8),
@@ -360,8 +360,8 @@ function App() {
         padding: 12,
         displayColors: false,
         callbacks: {
-          title: (items) => `Giờ: ${items[0].label}`,
-          label: (item) => `Số cuộc tấn công: ${item.raw}`
+          title: (items) => `Hour: ${items[0].label}`,
+          label: (item) => `Attacks: ${item.raw}`
         }
       }
     },
@@ -452,13 +452,13 @@ function App() {
 
   const getSeverityBadge = (sev) => {
     const severity = (sev || '').toLowerCase();
-    let bg = '#6b7280', color = '#fff', label = 'Thông tin';
+    let bg = '#6b7280', color = '#fff', label = 'Info';
     if (severity === 'high' || severity === 'danger') {
-      bg = COLORS.red; label = 'Cao';
+      bg = COLORS.red; label = 'High';
     } else if (severity === 'medium' || severity === 'warning') {
-      bg = COLORS.yellow; color = '#000'; label = 'Trung bình';
+      bg = COLORS.yellow; color = '#000'; label = 'Medium';
     } else if (severity === 'low' || severity === 'info') {
-      bg = COLORS.green; label = 'Thấp';
+      bg = COLORS.green; label = 'Low';
     }
     return { bg, color, label };
   };
@@ -471,11 +471,11 @@ function App() {
   const getActionBadge = (action) => {
     const act = (action || '').toLowerCase();
     let bg = '#6b7280', color = '#fff', label = action || '-';
-    if (act === 'drop') { bg = COLORS.red; label = 'Chặn'; }
-    else if (act === 'alert') { bg = COLORS.orange; label = 'Cảnh báo'; }
-    else if (act === 'pass') { bg = COLORS.green; label = 'Bỏ qua'; }
-    else if (act === 'log') { bg = COLORS.blue; label = 'Ghi log'; }
-    else if (act === 'reject') { bg = COLORS.purple; label = 'Từ chối'; }
+    if (act === 'drop') { bg = COLORS.red; label = 'Drop'; }
+    else if (act === 'alert') { bg = COLORS.orange; label = 'Alert'; }
+    else if (act === 'pass') { bg = COLORS.green; label = 'Pass'; }
+    else if (act === 'log') { bg = COLORS.blue; label = 'Log'; }
+    else if (act === 'reject') { bg = COLORS.purple; label = 'Reject'; }
     else if (act === 'sdrop') { bg = '#374151'; label = 'Silent'; }
     return { bg, color, label };
   };
@@ -551,14 +551,14 @@ function App() {
     return (
       <div className="pagination-container">
         <div className="pagination-info">
-          Trang {currentPage} / {totalPages} | Tổng {pagination.total} cảnh báo
+          Page {currentPage} / {totalPages} | {pagination.total} alerts
         </div>
         <div className="pagination-controls">
           <button
             className="pagination-btn"
             onClick={() => handlePageChange(0)}
             disabled={currentPage === 1}
-            title="Trang đầu"
+            title="First page"
           >
             <ChevronFirst size={16} />
           </button>
@@ -566,7 +566,7 @@ function App() {
             className="pagination-btn"
             onClick={() => handlePageChange(pagination.offset - PER_PAGE)}
             disabled={currentPage === 1}
-            title="Trang trước"
+            title="Previous page"
           >
             <ChevronLeft size={16} />
           </button>
@@ -589,7 +589,7 @@ function App() {
             className="pagination-btn"
             onClick={() => handlePageChange(pagination.offset + PER_PAGE)}
             disabled={currentPage === totalPages}
-            title="Trang sau"
+            title="Next page"
           >
             <ChevronRight size={16} />
           </button>
@@ -597,7 +597,7 @@ function App() {
             className="pagination-btn"
             onClick={() => handlePageChange((totalPages - 1) * PER_PAGE)}
             disabled={currentPage === totalPages}
-            title="Trang cuối"
+            title="Last page"
           >
             <ChevronLast size={16} />
           </button>
@@ -618,16 +618,16 @@ function App() {
                 <h1 className="main-title">SNORT</h1>
                 <span className="version-badge">v3.0</span>
               </div>
-              <p className="subtitle">Hệ thống giám sát và phát hiện xâm nhập mạng</p>
+              <p className="subtitle">Network intrusion detection and monitoring platform</p>
             </div>
             <div className="d-flex flex-wrap align-items-center gap-3">
               <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
                 {isConnected ? <Wifi size={14} /> : <WifiOff size={14} />}
-                <span>{isConnected ? 'Đã kết nối' : 'Mất kết nối'}</span>
+                <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
               </div>
               <div className="live-badge">
                 <span className="live-dot"></span>
-                <span>Trực tiếp</span>
+                <span>Live</span>
               </div>
               <button className="refresh-btn" onClick={handleRefresh} disabled={isLoading}>
                 <RefreshCw size={16} className={isLoading ? 'spinning' : ''} />
@@ -646,11 +646,11 @@ function App() {
               <AlertTriangle size={24} />
             </div>
             <div className="stat-content">
-              <span className="stat-label">Tổng cảnh báo</span>
+              <span className="stat-label">Total Alerts</span>
               <span className="stat-value">{overview?.total?.toLocaleString() || pagination.total.toLocaleString()}</span>
               <span className="stat-trend">
                 {overview?.percent_change >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                {overview?.percent_change || 0}% so với hôm qua
+                {overview?.percent_change || 0}% vs yesterday
               </span>
             </div>
           </div>
@@ -660,9 +660,9 @@ function App() {
               <Target size={24} />
             </div>
             <div className="stat-content">
-              <span className="stat-label">IP tấn công</span>
+              <span className="stat-label">Attacker IPs</span>
               <span className="stat-value">{overview?.attacker_ips?.toLocaleString() || 0}</span>
-              <span className="stat-trend neutral">địa chỉ IP duy nhất</span>
+              <span className="stat-trend neutral">unique source addresses</span>
             </div>
           </div>
 
@@ -671,9 +671,9 @@ function App() {
               <Shield size={24} />
             </div>
             <div className="stat-content">
-              <span className="stat-label">Phát hiện đe dọa</span>
+              <span className="stat-label">Threats Detected</span>
               <span className="stat-value">{overview?.today?.toLocaleString() || 0}</span>
-              <span className="stat-trend neutral">sự kiện nguy hiểm bị chặn</span>
+              <span className="stat-trend neutral">high-risk events blocked</span>
             </div>
           </div>
 
@@ -682,9 +682,9 @@ function App() {
               <List size={24} />
             </div>
             <div className="stat-content">
-              <span className="stat-label">Luật đang giám sát</span>
+              <span className="stat-label">Active Rules</span>
               <span className="stat-value">{overview?.total_rules?.toLocaleString() || overview?.active_rules?.toLocaleString() || 0}</span>
-              <span className="stat-trend neutral">quy tắc Snort3</span>
+              <span className="stat-trend neutral">Snort3 detection rules</span>
             </div>
           </div>
 
@@ -693,9 +693,9 @@ function App() {
               <Database size={24} />
             </div>
             <div className="stat-content">
-              <span className="stat-label">Bản ghi trong CSDL</span>
+              <span className="stat-label">Database Records</span>
               <span className="stat-value">{overview?.total?.toLocaleString() || 0}</span>
-              <span className="stat-trend neutral">dữ liệu đã lưu trữ</span>
+              <span className="stat-trend neutral">stored security events</span>
             </div>
           </div>
         </div>
@@ -707,7 +707,7 @@ function App() {
                 <Form.Control
                   type="text"
                   className="filter-input"
-                  placeholder="IP Nguồn"
+                  placeholder="Source IP"
                   value={srcIpFilter}
                   onChange={(e) => setSrcIpFilter(e.target.value)}
                 />
@@ -717,7 +717,7 @@ function App() {
                 <Form.Control
                   type="text"
                   className="filter-input"
-                  placeholder="IP Đích"
+                  placeholder="Destination IP"
                   value={dstIpFilter}
                   onChange={(e) => setDstIpFilter(e.target.value)}
                 />
@@ -727,11 +727,11 @@ function App() {
                 <Dropdown>
                   <Dropdown.Toggle variant="secondary" className="filter-dropdown-full">
                     <Filter size={14} className="me-2" />
-                    {attackTypeFilter ? attackTypeFilter : 'Loại tấn công'}
+                    {attackTypeFilter ? attackTypeFilter : 'Attack Type'}
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
                     <Dropdown.Item onClick={() => setAttackTypeFilter('')} active={attackTypeFilter === ''}>
-                      Tất cả
+                      All Attack Types
                     </Dropdown.Item>
                     {attackTypes.map(type => (
                       <Dropdown.Item
@@ -750,7 +750,7 @@ function App() {
                 <Dropdown>
                   <Dropdown.Toggle variant="secondary" className="filter-dropdown-full">
                     <Filter size={14} className="me-2" />
-                    {actionFilter ? ACTIONS.find(a => a.value === actionFilter)?.label : 'Hành động'}
+                    {actionFilter ? ACTIONS.find(a => a.value === actionFilter)?.label : 'Action'}
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
                     {ACTIONS.map(a => (
@@ -770,7 +770,7 @@ function App() {
                 <Dropdown>
                   <Dropdown.Toggle variant="secondary" className="filter-dropdown-full">
                     <Filter size={14} className="me-2" />
-                    {severityFilter ? SEVERITY_LEVELS.find(s => s.value === severityFilter)?.label : 'Mức độ'}
+                    {severityFilter ? SEVERITY_LEVELS.find(s => s.value === severityFilter)?.label : 'Severity'}
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
                     {SEVERITY_LEVELS.map(s => (
@@ -789,12 +789,12 @@ function App() {
               <div className="filter-group filter-actions">
                 <button type="submit" className="search-btn">
                   <Search size={16} />
-                  Tìm
+                  Search
                 </button>
                 {hasActiveFilters && (
                   <button type="button" className="clear-filters-btn" onClick={clearFilters}>
                     <X size={16} />
-                    Xóa lọc
+                    Clear Filters
                   </button>
                 )}
               </div>
@@ -808,9 +808,9 @@ function App() {
               <div className="chart-header">
                 <h5 className="chart-title">
                   <Activity size={18} className="me-2" />
-                  Số lượng tấn công theo thời gian (24 giờ qua)
+                  Attack Volume Over Time (Last 24 Hours)
                 </h5>
-                <span className="chart-subtitle">Biểu đồ đường thể hiện xu hướng tấn công theo giờ</span>
+                <span className="chart-subtitle">Hourly attack trend from Snort3 alert telemetry</span>
               </div>
               <div className="chart-container" style={{ height: '300px' }}>
                 <Line data={lineChartData} options={lineOptions} />
@@ -821,8 +821,8 @@ function App() {
           <Col lg={4} className="mb-3">
             <div className="chart-card">
               <div className="chart-header">
-                <h5 className="chart-title">Phân bổ mức độ nguy hiểm</h5>
-                <span className="chart-subtitle">Tỷ lệ cảnh báo theo mức độ</span>
+                <h5 className="chart-title">Severity Distribution</h5>
+                <span className="chart-subtitle">Alert ratio grouped by severity level</span>
               </div>
               <div className="chart-container" style={{ height: '260px' }}>
                 <Doughnut data={donutChartData} options={donutOptions} />
@@ -835,14 +835,14 @@ function App() {
           <Col lg={5} className="mb-3">
             <div className="chart-card">
               <div className="chart-header">
-                <h5 className="chart-title">Loại hình tấn công</h5>
-                <span className="chart-subtitle">Phân loại các loại tấn công được phát hiện</span>
+                <h5 className="chart-title">Attack Categories</h5>
+                <span className="chart-subtitle">Detected attack families and rule matches</span>
               </div>
               <div className="chart-container" style={{ height: '280px' }}>
                 {pieChartData.labels && pieChartData.labels.length > 0 ? (
                   <Pie data={pieChartData} options={pieOptions} />
                 ) : (
-                  <div className="no-chart-data">Chưa có dữ liệu</div>
+                  <div className="no-chart-data">No data available</div>
                 )}
               </div>
             </div>
@@ -851,14 +851,14 @@ function App() {
           <Col lg={4} className="mb-3">
             <div className="chart-card">
               <div className="chart-header">
-                <h5 className="chart-title">Top 10 IP tấn công</h5>
-                <span className="chart-subtitle">Các địa chỉ IP có nhiều cuộc tấn công nhất</span>
+                <h5 className="chart-title">Top 10 Attacker IPs</h5>
+                <span className="chart-subtitle">Source addresses with the highest alert volume</span>
               </div>
               <div className="chart-container" style={{ height: '280px' }}>
                 {barChartData.labels && barChartData.labels.length > 0 ? (
                   <Bar data={barChartData} options={barOptions} />
                 ) : (
-                  <div className="no-chart-data">Chưa có dữ liệu</div>
+                  <div className="no-chart-data">No data available</div>
                 )}
               </div>
             </div>
@@ -867,8 +867,8 @@ function App() {
           <Col lg={3} className="mb-3">
             <div className="chart-card top-ip-card">
               <div className="chart-header">
-                <h5 className="chart-title">Danh sách IP</h5>
-                <span className="chart-subtitle">Top IP nguồn tấn công</span>
+                <h5 className="chart-title">Source IP Watchlist</h5>
+                <span className="chart-subtitle">Highest-volume attacking sources</span>
               </div>
               <div className="top-ip-list-custom">
                 {topIPs.map((item, idx) => (
@@ -876,7 +876,7 @@ function App() {
                     <div className="ip-rank">{idx + 1}</div>
                     <div className="ip-info">
                       <span className="ip-address">{item.ip}</span>
-                      <span className="ip-attacks">{item.count} lần</span>
+                      <span className="ip-attacks">{item.count} events</span>
                     </div>
                     <div className="ip-bar">
                       <div
@@ -890,7 +890,7 @@ function App() {
                   </div>
                 ))}
                 {topIPs.length === 0 && (
-                  <div className="no-data-custom">Chưa có dữ liệu</div>
+                  <div className="no-data-custom">No data available</div>
                 )}
               </div>
             </div>
@@ -903,10 +903,10 @@ function App() {
               <div className="table-header">
                 <h5 className="chart-title">
                   <AlertTriangle size={18} className="me-2" />
-                  Danh sách cảnh báo
+                  Alert Events
                 </h5>
                 <span className="table-subtitle">
-                  {hasActiveFilters ? `Kết quả lọc: ${pagination.total} cảnh báo` : `Tổng cộng: ${pagination.total} cảnh báo`}
+                  {hasActiveFilters ? `Filtered results: ${pagination.total} alerts` : `Total: ${pagination.total} alerts`}
                 </span>
               </div>
               <div className="table-container">
@@ -914,14 +914,14 @@ function App() {
                   <thead>
                     <tr>
                       <th>#</th>
-                      <th>Thời gian</th>
-                      <th>IP Nguồn</th>
-                      <th>IP Đích</th>
-                      <th>Giao thức</th>
-                      <th>Loại tấn công</th>
-                      <th>Luật (SID)</th>
-                      <th>Hành động</th>
-                      <th>Mức độ</th>
+                      <th>Time</th>
+                      <th>Source IP</th>
+                      <th>Destination IP</th>
+                      <th>Protocol</th>
+                      <th>Attack Type</th>
+                      <th>Rule (SID)</th>
+                      <th>Action</th>
+                      <th>Severity</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -937,7 +937,7 @@ function App() {
                           <td className="dst-ip">{alert.dst_ip || '-'}</td>
                           <td><span className="proto-cell">{alert.proto || '-'}</span></td>
                           <td className="attack-type-cell">
-                            {getActionIcon(alert.action)} {alert.attack_type || alert.rule_msg || 'Không xác định'}
+                            {getActionIcon(alert.action)} {alert.attack_type || alert.rule_msg || 'Unknown'}
                           </td>
                           <td className="sid-cell">{alert.rule_sid || '-'}</td>
                           <td>
@@ -962,7 +962,7 @@ function App() {
                       <tr>
                         <td colSpan="10" className="no-alerts">
                           <Info size={24} />
-                          <span>Không tìm thấy cảnh báo nào</span>
+                          <span>No alerts found</span>
                         </td>
                       </tr>
                     )}
@@ -979,7 +979,7 @@ function App() {
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h5>Chi tiết cảnh báo</h5>
+              <h5>Alert Details</h5>
               <button className="modal-close" onClick={closeModal}>
                 <X size={20} />
               </button>
@@ -991,31 +991,31 @@ function App() {
                   <span>#{selectedAlert.id}</span>
                 </div>
                 <div className="detail-item">
-                  <label>Thời gian</label>
+                  <label>Time</label>
                   <span>{selectedAlert.timestamp}</span>
                 </div>
                 <div className="detail-item">
-                  <label>IP Nguồn</label>
+                  <label>Source IP</label>
                   <span className="ip-highlight">{selectedAlert.src_ip || '-'}</span>
                 </div>
                 <div className="detail-item">
-                  <label>IP Đích</label>
+                  <label>Destination IP</label>
                   <span className="ip-highlight">{selectedAlert.dst_ip || '-'}</span>
                 </div>
                 <div className="detail-item">
-                  <label>Giao thức</label>
+                  <label>Protocol</label>
                   <span>{selectedAlert.proto || '-'}</span>
                 </div>
                 <div className="detail-item full-width">
-                  <label>Loại tấn công</label>
-                  <span>{selectedAlert.attack_type || 'Không xác định'}</span>
+                  <label>Attack Type</label>
+                  <span>{selectedAlert.attack_type || 'Unknown'}</span>
                 </div>
                 <div className="detail-item">
-                  <label>Luật (SID)</label>
+                  <label>Rule (SID)</label>
                   <span className="sid-highlight">{selectedAlert.rule_sid ? `SID:${selectedAlert.rule_sid}` : '-'}</span>
                 </div>
                 <div className="detail-item">
-                  <label>Hành động</label>
+                  <label>Action</label>
                   {(() => {
                     const actionBadge = getActionBadge(selectedAlert.action);
                     return (
@@ -1026,7 +1026,7 @@ function App() {
                   })()}
                 </div>
                 <div className="detail-item">
-                  <label>Mức độ</label>
+                  <label>Severity</label>
                   {(() => {
                     const badge = getSeverityBadge(selectedAlert.severity);
                     return (
