@@ -615,7 +615,7 @@ function App() {
           <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3">
             <div>
               <div className="d-flex align-items-center gap-3 mb-2">
-                <h1 className="main-title">Snort IDS</h1>
+                <h1 className="main-title">SNORT</h1>
                 <span className="version-badge">v3.0</span>
               </div>
               <p className="subtitle">Hệ thống giám sát và phát hiện xâm nhập mạng</p>
