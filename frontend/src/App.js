@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import './App.css';
-import { Container, Row, Col, Dropdown, Table, Form, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Dropdown, Table, Form } from 'react-bootstrap';
 import {
   AlertTriangle, Target, Shield, List, Database,
-  Eye, Calendar, Clock, Search, Filter, Activity,
+  Eye, Calendar, Search, Filter, Activity,
   Wifi, WifiOff, RefreshCw, TrendingUp, TrendingDown,
   X, Info, ChevronLeft, ChevronRight, ChevronFirst, ChevronLast
 } from 'lucide-react';
@@ -81,7 +81,7 @@ function App() {
   const [barChartData, setBarChartData] = useState({ labels: [], datasets: [] });
   const [topIPs, setTopIPs] = useState([]);
   const [lastUpdate, setLastUpdate] = useState(new Date());
-  const [refreshInterval, setRefreshInterval] = useState(10000);
+  const refreshInterval = 5000;
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState(null);
@@ -629,18 +629,6 @@ function App() {
                 <span className="live-dot"></span>
                 <span>Trực tiếp</span>
               </div>
-              <Dropdown>
-                <Dropdown.Toggle variant="secondary" size="sm" className="filter-dropdown">
-                  <Clock size={14} className="me-1" />
-                  {refreshInterval / 1000}s
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  <Dropdown.Item onClick={() => setRefreshInterval(5000)}>5 giây</Dropdown.Item>
-                  <Dropdown.Item onClick={() => setRefreshInterval(10000)}>10 giây</Dropdown.Item>
-                  <Dropdown.Item onClick={() => setRefreshInterval(30000)}>30 giây</Dropdown.Item>
-                  <Dropdown.Item onClick={() => setRefreshInterval(60000)}>1 phút</Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown>
               <button className="refresh-btn" onClick={handleRefresh} disabled={isLoading}>
                 <RefreshCw size={16} className={isLoading ? 'spinning' : ''} />
               </button>
