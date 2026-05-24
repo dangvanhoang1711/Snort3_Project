@@ -39,7 +39,7 @@ router.get('/stats/overview', async (req, res) => {
 
     // Allowed traffic hôm nay
     const todayAllowed = await db.get(
-      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND action = 'allow'`,
+      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND action = 'pass'`,
       [todayStart]
     )
 

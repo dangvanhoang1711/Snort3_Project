@@ -10,10 +10,25 @@ Endpoints:
 
 - POST /api/logs
   - Body: JSON { data: "<alert_csv content>" } OR raw text body (text/plain)
-  - Response: { inserted: <n>, details: [ { id, timestamp } ] }
+  - Requires header: `x-api-key`
+  - Response: { processed: <n>, buffered: <n> }
+
+- POST /api/ingest
+  - Body: JSON { data: "<alert_csv content>" } OR raw text body (text/plain)
+  - Requires header: `x-api-key`
+  - Response: { processed: <n>, buffered: <n> }
 
 - GET /api/stats
   - Response: { byType, bySrc, byDst, recent }
+
+- GET /api/stats/overview
+  - Response: SOC summary metrics from `alerts_aggregated`
+
+- GET /api/stats/hourly
+  - Response: 24 hourly buckets for charting
+
+- GET /api/logs/attack-types
+  - Response: array of distinct attack types
 
 - Health: GET /health
 
@@ -23,8 +38,12 @@ Realtime:
 
 Notes on CSV format accepted
 
-The backend expects Snort alert_csv format per line with columns:
+The backend accepts Snort alert_csv format per line with columns:
 
 timestamp, pkt_num, proto, pkt_gen, pkt_len, dir, src_ap, dst_ap, rule, action
+
+It also accepts the simplified forwarder format:
+
+src_ip, dst_ip, dst_port, attack_type, severity, action, proto, count
 
 Examples and integration: see docs/INTEGRATION.md

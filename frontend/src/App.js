@@ -176,18 +176,27 @@ function App() {
     const handler = (alert) => {
       const incoming = { ...alert, __incoming: true };
       setAlerts((prev) => {
+        if (incoming.id) {
+          const existingIndex = prev.findIndex((item) => item.id === incoming.id);
+          if (existingIndex !== -1) {
+            const next = [...prev];
+            next[existingIndex] = { ...next[existingIndex], ...incoming };
+            return next;
+          }
+        }
         const next = [incoming, ...prev].slice(0, PER_PAGE);
         return next;
       });
+      const delta = incoming.delta_count || incoming.count || 1;
       setLastUpdate(new Date());
       setOverview((prev) => (prev ? {
         ...prev,
-        total: (prev.total || 0) + 1,
-        today: (prev.today || 0) + 1
+        total: (prev.total || 0) + delta,
+        today: (prev.today || 0) + delta
       } : null));
       setPagination((prev) => ({
         ...prev,
-        total: prev.total + 1
+        total: incoming.is_update ? prev.total : prev.total + 1
       }));
     };
     socket.on('alert:new', handler);

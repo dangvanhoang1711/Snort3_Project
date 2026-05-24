@@ -92,11 +92,24 @@ class AlertAggregator {
              WHERE id = ?`,
             [entry.count, entry.last_seen, existing.id]
           )
+
+          try {
+            realtime.emitAlert({
+              ...entry,
+              id: existing.id,
+              count: existing.count + entry.count,
+              delta_count: entry.count,
+              is_aggregated: true,
+              is_update: true
+            })
+          } catch (err) {
+            logger.error('Failed to emit realtime update event', err)
+          }
         } else {
-          await db.run(
-            `INSERT INTO alerts_aggregated 
-             (src_ip, dst_ip, dst_port, attack_type, rule_sid, severity, action, proto, count, first_seen, last_seen) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          const result = await db.run(
+            `INSERT INTO alerts_aggregated
+              (src_ip, dst_ip, dst_port, attack_type, rule_sid, severity, action, proto, count, first_seen, last_seen)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               entry.src_ip, entry.dst_ip, entry.dst_port, entry.attack_type, entry.rule_sid,
               entry.severity, entry.action, entry.proto, entry.count,
@@ -107,6 +120,8 @@ class AlertAggregator {
           try {
             realtime.emitAlert({
               ...entry,
+              id: result.lastID,
+              delta_count: entry.count,
               is_aggregated: true
             })
           } catch (err) {
