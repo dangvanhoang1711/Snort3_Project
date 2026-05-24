@@ -1054,6 +1054,18 @@ body::after {
   width: 50px;
 }
 
+.alerts-table .protocol-col,
+.alerts-table .action-col,
+.alerts-table .severity-col {
+  text-align: center;
+}
+
+.alerts-table tbody td.protocol-col,
+.alerts-table tbody td.action-col,
+.alerts-table tbody td.severity-col {
+  vertical-align: middle;
+}
+
 .alerts-table tbody tr {
   background: transparent;
   transition: background 0.2s;
@@ -1107,7 +1119,10 @@ body::after {
   font-weight: 600;
   font-size: 11px;
   text-align: center;
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
 }
 
 .attack-type-cell {
@@ -1128,9 +1143,11 @@ body::after {
 .action-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   padding: 5px 10px;
   border-radius: 6px;
+  min-width: 68px;
   font-size: 10px !important;
   font-weight: 600 !important;
   text-transform: uppercase;
@@ -1147,9 +1164,11 @@ body::after {
 .severity-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   padding: 5px 10px;
   border-radius: 20px;
+  min-width: 74px;
   font-size: 10px !important;
   font-weight: 600 !important;
   text-transform: uppercase;

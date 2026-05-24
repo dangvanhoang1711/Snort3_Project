@@ -917,11 +917,11 @@ function App() {
                       <th>Time</th>
                       <th>Source IP</th>
                       <th>Destination IP</th>
-                      <th>Protocol</th>
+                      <th className="protocol-col">Protocol</th>
                       <th>Attack Type</th>
                       <th>Rule (SID)</th>
-                      <th>Action</th>
-                      <th>Severity</th>
+                      <th className="action-col">Action</th>
+                      <th className="severity-col">Severity</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -935,17 +935,17 @@ function App() {
                           <td className="timestamp-cell">{alert.timestamp}</td>
                           <td className="src-ip">{alert.src_ip || '-'}</td>
                           <td className="dst-ip">{alert.dst_ip || '-'}</td>
-                          <td><span className="proto-cell">{alert.proto || '-'}</span></td>
+                          <td className="protocol-col"><span className="proto-cell">{alert.proto || '-'}</span></td>
                           <td className="attack-type-cell">
                             {getActionIcon(alert.action)} {alert.attack_type || alert.rule_msg || 'Unknown'}
                           </td>
                           <td className="sid-cell">{alert.rule_sid || '-'}</td>
-                          <td>
+                          <td className="action-col">
                             <span className="action-badge" style={{ backgroundColor: actionBadge.bg, color: actionBadge.color }}>
                               {actionBadge.label}
                             </span>
                           </td>
-                          <td>
+                          <td className="severity-col">
                             <span className="severity-badge" style={{ backgroundColor: badge.bg, color: badge.color }}>
                               {badge.label}
                             </span>
