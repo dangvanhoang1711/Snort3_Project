@@ -555,12 +555,23 @@ body::after {
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
+  position: relative;
+  z-index: 1;
 }
 
 .search-filter-bar .filter-group {
   flex: 1;
   min-width: 140px;
   max-width: 180px;
+}
+
+.search-filter-bar .filter-actions {
+  flex: 0 0 auto;
+  min-width: max-content;
+  max-width: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .search-filter-bar .filter-input {
@@ -867,6 +878,7 @@ body::after {
 .filter-group {
   display: flex;
   align-items: center;
+  min-height: 44px;
 }
 
 .filter-input {
@@ -932,6 +944,8 @@ body::after {
   color: var(--text-secondary) !important;
   font-size: 13px !important;
   min-width: 160px;
+  width: 100%;
+  height: 44px;
   transition: all 0.3s ease;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
@@ -956,12 +970,15 @@ body::after {
   border: none;
   border-radius: 10px;
   padding: 10px 20px;
+  min-width: 108px;
+  height: 44px;
   color: white;
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   transition: all 0.3s ease;
   box-shadow: var(--glow-blue);
@@ -977,11 +994,14 @@ body::after {
   border: 1px solid var(--border-subtle);
   border-radius: 10px;
   padding: 10px 16px;
+  min-width: 132px;
+  height: 44px;
   color: var(--text-secondary);
   font-size: 13px;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   transition: all 0.3s ease;
 }
@@ -1682,6 +1702,18 @@ body::after {
   
   .filter-group {
     width: 100%;
+    max-width: none !important;
+  }
+
+  .search-filter-bar .filter-actions {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .search-filter-bar .filter-actions .search-btn,
+  .search-filter-bar .filter-actions .clear-filters-btn {
+    flex: 1;
+    min-width: 0;
   }
   
   .filter-input,
