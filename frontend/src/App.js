@@ -112,23 +112,33 @@ function App() {
   const socketRef = useRef(null);
   const mountedRef = useRef(true);
   const paginationRef = useRef({ offset: 0, total: 0, limit: PER_PAGE, totalPages: 0 });
+  const realtimeRefreshRef = useRef(null);
 
-  const fetchData = useCallback(async (newOffset = null) => {
+  const fetchData = useCallback(async (newOffset = null, overrides = {}) => {
     if (!mountedRef.current) return;
     setIsLoading(true);
     try {
       const currentOffset = newOffset !== null ? newOffset : paginationRef.current.offset;
+      const filters = {
+        search: searchTerm,
+        severity: severityFilter,
+        action: actionFilter,
+        srcIp: srcIpFilter,
+        dstIp: dstIpFilter,
+        attackType: attackTypeFilter,
+        ...overrides
+      };
 
       const [alertsRes, overviewRes, statsRes, hourlyRes] = await Promise.all([
         getAlerts({
           limit: PER_PAGE,
           offset: currentOffset,
-          search: searchTerm,
-          severity: severityFilter,
-          action: actionFilter,
-          srcIp: srcIpFilter,
-          dstIp: dstIpFilter,
-          attackType: attackTypeFilter
+          search: filters.search,
+          severity: filters.severity,
+          action: filters.action,
+          srcIp: filters.srcIp,
+          dstIp: filters.dstIp,
+          attackType: filters.attackType
         }),
         getOverview(),
         getStats(),
@@ -155,6 +165,14 @@ function App() {
       if (mountedRef.current) setIsLoading(false);
     }
   }, [searchTerm, severityFilter, actionFilter, srcIpFilter, dstIpFilter, attackTypeFilter]);
+
+  const scheduleRealtimeRefresh = useCallback(() => {
+    if (realtimeRefreshRef.current) return;
+    realtimeRefreshRef.current = setTimeout(() => {
+      realtimeRefreshRef.current = null;
+      if (mountedRef.current) fetchData(null);
+    }, 800);
+  }, [fetchData]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -188,16 +206,21 @@ function App() {
         return next;
       });
       const delta = incoming.delta_count || incoming.count || 1;
+      const isThreat = (incoming.severity || '').toLowerCase() === 'high' && (incoming.action || '').toLowerCase() === 'drop';
       setLastUpdate(new Date());
       setOverview((prev) => (prev ? {
         ...prev,
         total: (prev.total || 0) + delta,
-        today: (prev.today || 0) + delta
+        today: isThreat ? (prev.today || 0) + delta : (prev.today || 0),
+        today_alerts: (prev.today_alerts || 0) + delta,
+        today_blocked: (incoming.action || '').toLowerCase() === 'drop' ? (prev.today_blocked || 0) + delta : (prev.today_blocked || 0),
+        today_allowed: (incoming.action || '').toLowerCase() === 'pass' ? (prev.today_allowed || 0) + delta : (prev.today_allowed || 0)
       } : null));
       setPagination((prev) => ({
         ...prev,
         total: incoming.is_update ? prev.total : prev.total + 1
       }));
+      scheduleRealtimeRefresh();
     };
     socket.on('alert:new', handler);
 
@@ -210,9 +233,10 @@ function App() {
       if (socket) socket.off('alert:new', handler);
       socket.off('connect');
       socket.off('disconnect');
+      if (realtimeRefreshRef.current) clearTimeout(realtimeRefreshRef.current);
       clearInterval(interval);
     };
-  }, [fetchData, refreshInterval]);
+  }, [fetchData, refreshInterval, scheduleRealtimeRefresh]);
 
   useEffect(() => {
     getAttackTypes().then(types => {
@@ -458,7 +482,7 @@ function App() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchData(true);
+    fetchData(0);
   };
 
   const handleRefresh = () => {
@@ -470,13 +494,19 @@ function App() {
   };
 
   const clearFilters = () => {
+    const emptyFilters = { search: '', severity: '', action: '', srcIp: '', dstIp: '', attackType: '' };
     setSearchTerm('');
     setSeverityFilter('');
     setActionFilter('');
     setSrcIpFilter('');
     setDstIpFilter('');
     setAttackTypeFilter('');
-    fetchData(0);
+    fetchData(0, emptyFilters);
+  };
+
+  const filterBySourceIp = (ip) => {
+    setSrcIpFilter(ip);
+    fetchData(0, { srcIp: ip });
   };
 
   const openAlertDetail = (alert) => {
@@ -854,7 +884,7 @@ function App() {
               </div>
               <div className="top-ip-list-custom">
                 {topIPs.map((item, idx) => (
-                  <div key={idx} className="top-ip-item-custom" onClick={() => { setSrcIpFilter(item.ip); fetchData(true); }}>
+                  <div key={idx} className="top-ip-item-custom" onClick={() => filterBySourceIp(item.ip)}>
                     <div className="ip-rank">{idx + 1}</div>
                     <div className="ip-info">
                       <span className="ip-address">{item.ip}</span>

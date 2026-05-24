@@ -5,6 +5,7 @@ const http = require('http')
 const sampleFile = path.join(__dirname, 'snort_sample_data.txt')
 const host = process.argv[2] || 'localhost'
 const port = process.argv[3] || '4000'
+const apiKey = process.env.API_KEY || 'demo-key'
 
 if (!fs.existsSync(sampleFile)) {
   console.error('File not found:', sampleFile)
@@ -19,11 +20,11 @@ console.log(`Sending ${lines.length} sample alerts...`)
 const options = {
   hostname: host,
   port: port,
-  path: '/api/logs',
+    path: '/api/ingest',
   method: 'POST',
   headers: {
     'Content-Type': 'text/plain',
-    'X-API-Key': 'demo-key',
+    'X-API-Key': apiKey,
     'Content-Length': Buffer.byteLength(data),
   },
 }

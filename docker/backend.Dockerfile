@@ -11,8 +11,8 @@ COPY backend-api/ .
 ENV NODE_ENV=production
 ENV DB_PATH=/data/alerts.db
 
-# Ensure data dir exists
-RUN mkdir -p /data && chown -R node:node /data
+# Ensure runtime dirs exist
+RUN mkdir -p /data /app/logs && chown -R node:node /data /app/logs
 
 EXPOSE 4000
 

@@ -1,4 +1,5 @@
 const { createLogger, format, transports } = require('winston')
+const fs = require('fs')
 
 const logger = createLogger({
   level: 'info',
@@ -14,6 +15,7 @@ const logger = createLogger({
 
 // Add file transport in production for persistent logs
 if (process.env.NODE_ENV === 'production') {
+  if (!fs.existsSync('logs')) fs.mkdirSync('logs', { recursive: true })
   logger.add(new transports.File({ filename: 'logs/combined.log' }))
 }
 

@@ -20,7 +20,9 @@ const { getStats } = require('../models/alerts')
 router.get('/stats/overview', async (req, res) => {
   try {
     const db = require('../db').getDb()
-    const todayStart = Math.floor(Date.now() / 86400000) * 86400000
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const todayStart = today.getTime()
 
     // Tổng tất cả events (bao gồm allow + drop - SOC logs everything)
     const totalAgg = await db.get(`SELECT SUM(count) as c FROM alerts_aggregated`)
@@ -106,14 +108,16 @@ router.get('/stats/hourly', async (req, res) => {
   try {
     const db = require('../db').getDb()
     const results = []
-    const now = Date.now()
+    const currentHour = new Date()
+    currentHour.setMinutes(0, 0, 0)
+    const currentHourStart = currentHour.getTime()
     
     for (let i = 0; i < 24; i++) {
-      const hourStart = now - (i * 3600000)
+      const hourStart = currentHourStart - (i * 3600000)
       const hourEnd = hourStart + 3600000
       const row = await db.get(
         `SELECT SUM(count) as count FROM alerts_aggregated WHERE last_seen >= ? AND last_seen < ?`,
-        [hourEnd - 3600000, hourEnd]
+        [hourStart, hourEnd]
       )
       const hourLabel = new Date(hourStart).getHours().toString().padStart(2, '0')
       results.unshift({ hour: `${hourLabel}:00`, count: row?.count || 0 })
