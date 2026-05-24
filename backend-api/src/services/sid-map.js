@@ -40,9 +40,9 @@ const ATTACK_TYPE_TO_SID = new Map([
 ])
 
 function getSidInfo(sid) {
-  if (!sid) return { attack_type: 'Không xác định', severity: 'low' }
+  if (!sid) return { attack_type: 'Unknown', severity: 'low' }
   if (SID_MAP.has(sid)) return SID_MAP.get(sid)
-  return { attack_type: 'Không xác định', severity: 'low' }
+  return { attack_type: 'Unknown', severity: 'low' }
 }
 
 function getSidByAttackType(attack_type) {
