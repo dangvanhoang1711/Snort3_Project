@@ -2,6 +2,19 @@
 
 ## Pre-Demo Checklist
 
+### On Kali VM (C2 Server)
+- [ ] C2 server running: `./setup-c2-server.sh`
+- [ ] Server listening on port 8080: `netstat -tuln | grep 8080`
+- [ ] Firewall allows port 8080
+
+### On Victim VM (Infected Machine)
+- [ ] Demo scripts copied to `~/demo-malware/`
+- [ ] Scripts executable: `chmod +x ~/demo-malware/*.sh`
+- [ ] Kali reachable: `ping 192.168.1.2`
+- [ ] C2 server reachable: `curl http://192.168.1.2:8080`
+
+
+
 ### On Snort VM
 - [ ] Snort3 running in IPS mode: `sudo snort -Q --daq afpacket -i enp0s3:enp0s8 -c /home/minhiw/snort3/lua/snort.lua`
 - [ ] Malware detection rules loaded: `cat /etc/snort/rules/test.rules | grep 1000200`
@@ -12,7 +25,7 @@
 - [ ] Frontend accessible: Open http://localhost:3000
 - [ ] Dashboard showing baseline data
 
-### On Kali VM
+### On Victim VM
 - [ ] Demo scripts copied to `~/demo-malware/`
 - [ ] Scripts executable: `chmod +x ~/demo-malware/*.sh`
 - [ ] Victim reachable: `ping 192.168.2.2`
@@ -39,7 +52,7 @@
 
 ### Phase 1: Seed Baseline Data (2 minutes)
 
-**On Kali VM**:
+**On Victim VM**:
 ```bash
 cd ~/demo-malware
 ./seed-baseline.sh
@@ -61,7 +74,7 @@ cd ~/demo-malware
 
 #### Demo 1: Malware Payload Download (2.5 minutes)
 
-**On Kali VM**:
+**On Victim VM**:
 ```bash
 ./1-eicar-download.sh
 ```
@@ -88,7 +101,7 @@ cd ~/demo-malware
 
 #### Demo 2: C2 Multi-Stage Beacon (3 minutes)
 
-**On Kali VM**:
+**On Victim VM**:
 ```bash
 ./2-c2-multistage.sh
 ```
@@ -115,7 +128,7 @@ cd ~/demo-malware
 
 #### Demo 3: Web Application Exploitation (2.5 minutes)
 
-**On Kali VM**:
+**On Victim VM**:
 ```bash
 ./3-shellshock-exploit.sh
 ```
@@ -140,7 +153,7 @@ cd ~/demo-malware
 
 #### Demo 4: Ransomware Behavior (2 minutes)
 
-**On Kali VM**:
+**On Victim VM**:
 ```bash
 ./4-ransomware-note.sh
 ```
@@ -168,7 +181,7 @@ cd ~/demo-malware
 
 #### Demo 5: DNS Tunneling & Exfiltration (2 minutes)
 
-**On Kali VM**:
+**On Victim VM**:
 ```bash
 ./5-dns-tunnel.sh
 ```
@@ -252,7 +265,7 @@ docker exec -it backend-api npm run db:reset
 # On Snort VM
 sudo rm /home/minhiw/snort-logs/*.csv
 
-# On Kali VM
+# On Victim VM
 # (no cleanup needed - scripts are stateless)
 ```
 
