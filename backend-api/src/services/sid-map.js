@@ -20,6 +20,7 @@ const SID_MAP = new Map([
   [1000104, { attack_type: 'DNS Query Anomaly', severity: 'medium' }],
   [1000105, { attack_type: 'ARP Spoofing Detected', severity: 'medium' }],
   [1000106, { attack_type: 'Ping of Death Detected', severity: 'medium' }],
+  [1000107, { attack_type: 'SSH Brute Force Attempt Detected', severity: 'medium' }],
 
   // ==========================================
   // MALWARE DETECTION RULES (SID 1000200-1000228)
@@ -88,6 +89,7 @@ const ATTACK_TYPE_TO_SID = new Map([
   ['DNS Query Anomaly', 1000104],
   ['ARP Spoofing Detected', 1000105],
   ['Ping of Death Detected', 1000106],
+  ['SSH Brute Force Attempt Detected', 1000107],
   
   // Malware Detection Rules
   ['EICAR Test File', 1000200],
