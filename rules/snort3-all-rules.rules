@@ -1,19 +1,12 @@
 # ==========================================
-# SNORT3 CONSOLIDATED RULES - Mini-SOC IDS/IPS
-# Generated: 2025-05-26
-# Total Rules: 43 (14 scan/flood + 29 malware)
-# SID Range: 1000001-1000228
-# All SID mappings must match backend-api/src/services/sid-map.js
-# ==========================================
-
-# ==========================================
-# SECTION 1: SCAN & FLOOD DETECTION
-# SID Range: 1000001-1000007, 1000100-1000107, 1000008
-# Direction: External -> Victim ($HOME_NET)
+# Snort3 Consolidated Rules - Mini-SOC
+# Combines: snort3-custom.rules + malware-detection.rules
+# SID mapping must match backend-api/src/services/sid-map.js
+# Snort3 syntax - tested with Snort++ 3.12.1.0
 # ==========================================
 
 # ---------------------------------------------------------
-# HIGH SEVERITY SCANS (SID: 1000001-1000007)
+# HIGH SEVERITY - SCAN DETECTION (SID: 1000001-1000008)
 # ---------------------------------------------------------
 
 # 1000001 - SYN Scan Detected
@@ -21,9 +14,8 @@ drop tcp any any -> $HOME_NET any (
     msg:"SYN Scan Detected";
     flags:S;
     flow:stateless;
-    detection_filter:track by_src,count 20,seconds 3;
-    sid:1000001;
-    rev:1;
+    detection_filter:track by_src, count 20, seconds 3;
+    sid:1000001; rev:1;
 )
 
 # 1000002 - NULL Scan Detected
@@ -31,8 +23,7 @@ drop tcp any any -> $HOME_NET any (
     msg:"NULL Scan Detected";
     flags:0;
     flow:stateless;
-    sid:1000002;
-    rev:1;
+    sid:1000002; rev:1;
 )
 
 # 1000003 - XMAS Scan Detected
@@ -40,8 +31,7 @@ drop tcp any any -> $HOME_NET any (
     msg:"XMAS Scan Detected";
     flags:FPU;
     flow:stateless;
-    sid:1000003;
-    rev:1;
+    sid:1000003; rev:1;
 )
 
 # 1000004 - FIN Scan Detected
@@ -49,8 +39,7 @@ drop tcp any any -> $HOME_NET any (
     msg:"FIN Scan Detected";
     flags:F;
     flow:stateless;
-    sid:1000004;
-    rev:1;
+    sid:1000004; rev:1;
 )
 
 # 1000005 - Stealth Scan Detected
@@ -58,8 +47,7 @@ drop tcp any any -> $HOME_NET any (
     msg:"Stealth Scan Detected";
     flags:SF;
     flow:stateless;
-    sid:1000005;
-    rev:1;
+    sid:1000005; rev:1;
 )
 
 # 1000006 - SYN Flood Detected
@@ -67,9 +55,8 @@ drop tcp any any -> $HOME_NET any (
     msg:"SYN Flood Detected";
     flags:S;
     flow:stateless;
-    detection_filter:track by_src,count 50,seconds 1;
-    sid:1000006;
-    rev:1;
+    detection_filter:track by_src, count 50, seconds 1;
+    sid:1000006; rev:1;
 )
 
 # 1000007 - Port Scan Detected
@@ -77,76 +64,17 @@ drop tcp any any -> $HOME_NET any (
     msg:"Port Scan Detected";
     flags:S;
     flow:stateless;
-    detection_filter:track by_src,count 100,seconds 10;
-    sid:1000007;
-    rev:1;
+    detection_filter:track by_src, count 100, seconds 10;
+    sid:1000007; rev:1;
 )
 
-# 1000008 - MALWARE-CNC Backdoor Connection
-drop tcp any any -> any 9999 (
-    msg:"MALWARE-CNC C&C Connection Attempt Detected";
-    sid:1000008;
-    rev:1;
-)
-
-# ---------------------------------------------------------
-# MEDIUM SEVERITY FLOODS (SID: 1000101-1000107)
-# ---------------------------------------------------------
-
-# 1000101 - ICMP Sweep Detected
-drop icmp any any -> $HOME_NET any (
-    msg:"ICMP Sweep Detected";
-    itype:8;
-    detection_filter:track by_src,count 30,seconds 5;
-    sid:1000101;
-    rev:1;
-)
-
-# 1000102 - ICMP Flood Detected
-drop icmp any any -> $HOME_NET any (
-    msg:"ICMP Flood Detected";
-    detection_filter:track by_src,count 50,seconds 1;
-    sid:1000102;
-    rev:1;
-)
-
-# 1000103 - UDP Flood Detected
-drop udp any any -> $HOME_NET any (
-    msg:"UDP Flood Detected";
-    detection_filter:track by_src,count 100,seconds 2;
-    sid:1000103;
-    rev:1;
-)
-
-# 1000104 - DNS Query Anomaly
-alert udp any any -> $HOME_NET 53 (
-    msg:"DNS Query Anomaly";
-    sid:1000104;
-    rev:1;
-)
-
-# 1000105 - ARP Spoofing Detected
-alert arp any any -> $HOME_NET any (
-    msg:"ARP Spoofing Detected";
-    sid:1000105;
-    rev:1;
-)
-
-# 1000106 - Ping of Death Detected
-drop icmp any any -> $HOME_NET any (
-    msg:"Ping of Death Detected";
-    icode:0;
-    itype:8;
-    sid:1000106;
-    rev:1;
-)
-
-# 1000107 - SSH Brute Force Attempt Detected
-drop tcp any any -> any 22 (
-    msg:"SSH Brute Force Attempt Detected";
-    detection_filter:track by_src, count 5, seconds 10;
-    sid:1000107;
-    rev:1;
+# 1000008 - DDoS Detected
+drop tcp any any -> $HOME_NET any (
+    msg:"DDoS Detected";
+    flags:S;
+    flow:stateless;
+    detection_filter:track by_dst, count 200, seconds 5;
+    sid:1000008; rev:1;
 )
 
 # ---------------------------------------------------------
@@ -157,465 +85,368 @@ drop tcp any any -> any 22 (
 pass icmp any any -> $HOME_NET any (
     msg:"ICMP Ping Allowed";
     itype:8;
-    sid:1000100;
-    rev:1;
+    sid:1000100; rev:1;
+)
+
+# ---------------------------------------------------------
+# MEDIUM SEVERITY (SID: 1000101-1000107)
+# ---------------------------------------------------------
+
+# 1000101 - ICMP Sweep Detected
+drop icmp any any -> $HOME_NET any (
+    msg:"ICMP Sweep Detected";
+    itype:8;
+    detection_filter:track by_src, count 30, seconds 5;
+    sid:1000101; rev:1;
+)
+
+# 1000102 - ICMP Flood Detected
+drop icmp any any -> $HOME_NET any (
+    msg:"ICMP Flood Detected";
+    detection_filter:track by_src, count 50, seconds 1;
+    sid:1000102; rev:1;
+)
+
+# 1000103 - UDP Flood Detected
+drop udp any any -> $HOME_NET any (
+    msg:"UDP Flood Detected";
+    detection_filter:track by_src, count 100, seconds 2;
+    sid:1000103; rev:1;
+)
+
+# 1000104 - DNS Query Anomaly
+alert udp any any -> $HOME_NET 53 (
+    msg:"DNS Query Anomaly";
+    sid:1000104; rev:1;
+)
+
+# 1000105 - ARP Spoofing Detected
+alert arp any any -> $HOME_NET any (
+    msg:"ARP Spoofing Detected";
+    sid:1000105; rev:1;
+)
+
+# 1000106 - Ping of Death Detected
+drop icmp any any -> $HOME_NET any (
+    msg:"Ping of Death Detected";
+    icode:0;
+    itype:8;
+    sid:1000106; rev:1;
+)
+
+# 1000107 - SSH Brute Force Attempt Detected
+drop tcp any any -> $HOME_NET 22 (
+    msg:"SSH Brute Force Attempt Detected";
+    flow:established, to_server;
+    detection_filter:track by_src, count 5, seconds 10;
+    sid:1000107; rev:1;
 )
 
 # ==========================================
-# SECTION 2: MALWARE DETECTION
-# SID Range: 1000200-1000228 (29 rules)
-# Direction: Victim ($HOME_NET) outbound to external
-# Matches stealth malware scripts:
-#   - system-update.sh (C2 beacon/command execution)
-#   - network-diagnostic.sh (DNS tunneling/exfiltration)
+# MALWARE DETECTION RULES (SID: 1000200-1000228)
+# Victim VM (192.168.2.2) runs malware scripts
+# Traffic direction: $HOME_NET -> any (outbound)
 # ==========================================
 
 # ---------------------------------------------------------
-# A1. PAYLOAD SIGNATURES (SID 1000200-1000205) - HIGH
+# A1. PAYLOAD SIGNATURES (SID: 1000200-1000205)
 # ---------------------------------------------------------
 
-# 1000200 - EICAR test file signature
-drop tcp $HOME_NET any -> any any (
+# 1000200 - EICAR test file
+alert tcp $HOME_NET any -> any any (
     msg:"MALWARE EICAR test file detected";
     flow:established;
-    content:"X5O!P%@AP[4|5c|PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*";
-    classtype:trojan-activity;
-    sid:1000200;
-    rev:1;
+    content:"X5O!P%@AP[4";
+    sid:1000200; rev:1;
 )
 
 # 1000201 - Metasploit payload pattern
-drop tcp $HOME_NET any -> any any (
-    msg:"MALWARE Metasploit payload pattern detected";
+alert tcp $HOME_NET any -> any any (
+    msg:"MALWARE Metasploit payload pattern";
     flow:established;
     content:"|fc e8 82 00 00 00|";
-    depth:6;
-    classtype:trojan-activity;
-    sid:1000201;
-    rev:1;
+    sid:1000201; rev:1;
 )
 
-# 1000202 - Reverse shell command pattern
-drop tcp $HOME_NET any -> any any (
+# 1000202 - Reverse shell command
+alert tcp $HOME_NET any -> any any (
     msg:"MALWARE Reverse shell command detected";
     flow:established;
-    content:"/bin/bash";
-    nocase;
-    content:"-i";
-    distance:0;
-    within:20;
-    classtype:trojan-activity;
-    sid:1000202;
-    rev:1;
+    content:"/bin/bash -i";
+    sid:1000202; rev:1;
 )
 
-# 1000203 - Netcat backdoor pattern
-drop tcp $HOME_NET any -> any any (
-    msg:"MALWARE Netcat backdoor pattern detected";
+# 1000203 - Netcat backdoor
+alert tcp $HOME_NET any -> any any (
+    msg:"MALWARE Netcat backdoor pattern";
     flow:established;
-    content:"nc";
-    nocase;
-    content:"-e";
-    distance:0;
-    within:10;
-    pcre:"/nc\s+-[el]/i";
-    classtype:trojan-activity;
-    sid:1000203;
-    rev:1;
+    content:"nc -e /bin";
+    sid:1000203; rev:1;
 )
 
 # 1000204 - Python reverse shell
-drop tcp $HOME_NET any -> any any (
+alert tcp $HOME_NET any -> any any (
     msg:"MALWARE Python reverse shell detected";
     flow:established;
-    content:"python";
-    nocase;
-    content:"socket";
-    distance:0;
-    within:100;
+    content:"import socket";
     content:"connect";
-    distance:0;
-    within:100;
-    classtype:trojan-activity;
-    sid:1000204;
-    rev:1;
+    sid:1000204; rev:1;
 )
 
 # 1000205 - Encoded PowerShell payload
-drop tcp $HOME_NET any -> any any (
-    msg:"MALWARE Encoded PowerShell payload detected";
+alert tcp $HOME_NET any -> any any (
+    msg:"MALWARE Encoded PowerShell payload";
     flow:established;
-    content:"powershell";
-    nocase;
-    content:"-enc";
-    distance:0;
-    within:20;
-    classtype:trojan-activity;
-    sid:1000205;
-    rev:1;
+    content:"powershell -enc";
+    sid:1000205; rev:1;
 )
 
 # ---------------------------------------------------------
-# A2. C2 COMMUNICATION (SID 1000206-1000210) - HIGH
-# Matches system-update.sh traffic to Kali C2 (192.168.1.2:8080)
+# A2. C2 COMMUNICATION (SID: 1000206-1000210)
+# Matches traffic from system-update.sh on Victim
+# Target: 192.168.1.2:8080 (Kali C2 server)
 # ---------------------------------------------------------
 
 # 1000206 - Cobalt Strike beacon pattern
-drop tcp $HOME_NET any -> any any (
-    msg:"MALWARE Cobalt Strike beacon pattern detected";
-    flow:established,to_server;
+alert tcp $HOME_NET any -> any 8080 (
+    msg:"MALWARE Cobalt Strike beacon pattern";
+    flow:established, to_server;
     http_header;
     content:"User-Agent: Mozilla/5.0 (compatible; MSIE";
     http_uri;
     content:"/submit.php";
-    classtype:trojan-activity;
-    sid:1000206;
-    rev:1;
+    sid:1000206; rev:1;
 )
 
-# 1000207 - Suspicious bot User-Agent (system-update.sh)
-drop tcp $HOME_NET any -> any any (
-    msg:"MALWARE Suspicious bot User-Agent detected";
-    flow:established,to_server;
+# 1000207 - Suspicious bot User-Agent
+alert tcp $HOME_NET any -> any 8080 (
+    msg:"MALWARE Suspicious bot User-Agent";
+    flow:established, to_server;
     http_header;
     content:"User-Agent: BotClient";
-    classtype:trojan-activity;
-    sid:1000207;
-    rev:1;
+    sid:1000207; rev:1;
 )
 
-# 1000208 - C2 check-in URI pattern (system-update.sh beacon)
-drop tcp $HOME_NET any -> any any (
-    msg:"MALWARE C2 check-in URI pattern detected";
-    flow:established,to_server;
+# 1000208 - C2 check-in URI pattern
+alert tcp $HOME_NET any -> any 8080 (
+    msg:"MALWARE C2 check-in URI pattern";
+    flow:established, to_server;
     http_uri;
     content:"/api/check";
-    classtype:trojan-activity;
-    sid:1000208;
-    rev:1;
+    sid:1000208; rev:1;
 )
 
-# 1000209 - C2 registration URI (system-update.sh registration)
-drop tcp $HOME_NET any -> any any (
-    msg:"MALWARE C2 registration attempt detected";
-    flow:established,to_server;
+# 1000209 - C2 registration URI
+alert tcp $HOME_NET any -> any 8080 (
+    msg:"MALWARE C2 registration attempt";
+    flow:established, to_server;
     http_uri;
     content:"/api/register";
-    classtype:trojan-activity;
-    sid:1000209;
-    rev:1;
+    sid:1000209; rev:1;
 )
 
-# 1000210 - Suspicious POST to root path
-drop tcp $HOME_NET any -> any any (
-    msg:"MALWARE Suspicious POST to root path detected";
-    flow:established,to_server;
-    content:"POST / HTTP";
-    depth:12;
-    classtype:trojan-activity;
-    sid:1000210;
-    rev:1;
+# 1000210 - Suspicious POST to root
+alert tcp $HOME_NET any -> any 8080 (
+    msg:"MALWARE Suspicious POST to root path";
+    flow:established, to_server;
+    content:"POST / HTTP/1.1";
+    sid:1000210; rev:1;
 )
 
 # ---------------------------------------------------------
-# A3. EXPLOIT DETECTION (SID 1000211-1000216) - CRITICAL
+# A3. EXPLOIT DETECTION (SID: 1000211-1000216)
 # ---------------------------------------------------------
 
 # 1000211 - Shellshock exploit
-drop tcp $HOME_NET any -> any any (
-    msg:"EXPLOIT Shellshock CGI attack detected";
-    flow:established,to_server;
+alert tcp $HOME_NET any -> any 80 (
+    msg:"EXPLOIT Shellshock CGI attack";
+    flow:established, to_server;
     http_header;
     content:"() {";
-    pcre:"/\(\)\s*\{.*;\s*\}/";
-    classtype:web-application-attack;
-    sid:1000211;
-    rev:1;
+    sid:1000211; rev:1;
 )
 
 # 1000212 - SQL injection attempt
-drop tcp $HOME_NET any -> any any (
-    msg:"EXPLOIT SQL injection attempt detected";
-    flow:established,to_server;
+alert tcp $HOME_NET any -> any 80 (
+    msg:"EXPLOIT SQL injection attempt";
+    flow:established, to_server;
     http_uri;
-    content:"union";
-    nocase;
-    pcre:"/(\%27)|(\')|(\-\-)|(\%23)|(#)/i";
-    classtype:web-application-attack;
-    sid:1000212;
-    rev:1;
+    content:"union select";
+    sid:1000212; rev:1;
 )
 
-# 1000213 - Directory traversal attack
-drop tcp $HOME_NET any -> any any (
-    msg:"EXPLOIT Directory traversal attempt detected";
-    flow:established,to_server;
+# 1000213 - Directory traversal
+alert tcp $HOME_NET any -> any 80 (
+    msg:"EXPLOIT Directory traversal attempt";
+    flow:established, to_server;
     http_uri;
-    content:"../";
-    pcre:"/(\.\.(\/|%2f)){2,}/i";
-    classtype:web-application-attack;
-    sid:1000213;
-    rev:1;
+    content:"../../../";
+    sid:1000213; rev:1;
 )
 
-# 1000214 - Command injection attempt
-drop tcp $HOME_NET any -> any any (
-    msg:"EXPLOIT Command injection attempt detected";
-    flow:established,to_server;
+# 1000214 - Command injection
+alert tcp $HOME_NET any -> any 80 (
+    msg:"EXPLOIT Command injection attempt";
+    flow:established, to_server;
     http_uri;
-    pcre:"/(;|\||`|\$\()/";
-    classtype:web-application-attack;
-    sid:1000214;
-    rev:1;
+    content:";/bin/sh";
+    sid:1000214; rev:1;
 )
 
 # 1000215 - XXE attack
-drop tcp $HOME_NET any -> any any (
+alert tcp $HOME_NET any -> any any (
     msg:"EXPLOIT XXE attack detected";
-    flow:established,to_server;
+    flow:established, to_server;
     content:"<!ENTITY";
-    nocase;
     content:"SYSTEM";
-    distance:0;
-    within:50;
-    classtype:web-application-attack;
-    sid:1000215;
-    rev:1;
+    sid:1000215; rev:1;
 )
 
-# 1000216 - Log4Shell exploit (CVE-2021-44228)
-drop tcp $HOME_NET any -> any any (
-    msg:"EXPLOIT Log4Shell CVE-2021-44228 detected";
+# 1000216 - Log4Shell exploit
+alert tcp $HOME_NET any -> any any (
+    msg:"EXPLOIT Log4Shell CVE-2021-44228";
     flow:established;
-    content:"${jndi:";
-    nocase;
-    pcre:"/\$\{jndi:(ldap|rmi|dns)/i";
-    classtype:web-application-attack;
-    sid:1000216;
-    rev:1;
+    content:"${jndi:ldap";
+    sid:1000216; rev:1;
 )
 
 # ---------------------------------------------------------
-# A4. RANSOMWARE INDICATORS (SID 1000217-1000219) - CRITICAL
+# A4. RANSOMWARE INDICATORS (SID: 1000217-1000219)
 # ---------------------------------------------------------
 
 # 1000217 - Ransomware note keywords
-drop tcp $HOME_NET any -> any any (
+alert tcp $HOME_NET any -> any any (
     msg:"RANSOMWARE Ransom note detected";
     flow:established;
-    content:"encrypted";
-    nocase;
-    content:"bitcoin";
-    nocase;
-    distance:0;
-    within:200;
-    classtype:trojan-activity;
-    sid:1000217;
-    rev:1;
+    content:"Your files have been encrypted";
+    sid:1000217; rev:1;
 )
 
 # 1000218 - Ransomware file extension pattern
-drop tcp $HOME_NET any -> any any (
-    msg:"RANSOMWARE Encrypted file extension detected";
+alert tcp $HOME_NET any -> any any (
+    msg:"RANSOMWARE Encrypted file extension";
     flow:established;
-    pcre:"/\.(locked|encrypted|crypto|crypt|cerber|locky)/i";
-    classtype:trojan-activity;
-    sid:1000218;
-    rev:1;
+    content:".locked";
+    sid:1000218; rev:1;
 )
 
 # 1000219 - Ransomware payment instruction
-drop tcp $HOME_NET any -> any any (
+alert tcp $HOME_NET any -> any any (
     msg:"RANSOMWARE Payment instruction detected";
     flow:established;
-    content:"decrypt";
-    nocase;
-    content:"payment";
-    nocase;
-    distance:0;
-    within:100;
+    content:"bitcoin";
     content:"wallet";
-    nocase;
-    distance:0;
-    within:100;
-    classtype:trojan-activity;
-    sid:1000219;
-    rev:1;
+    sid:1000219; rev:1;
 )
 
 # ---------------------------------------------------------
-# A5. DATA EXFILTRATION (SID 1000220-1000221) - HIGH
-# Matches network-diagnostic.sh HTTP exfiltration
+# A5. DATA EXFILTRATION (SID: 1000220-1000221)
 # ---------------------------------------------------------
 
-# 1000220 - Base64 encoded data exfiltration (network-diagnostic.sh)
-drop tcp $HOME_NET any -> any any (
-    msg:"EXFIL Base64 encoded data transfer detected";
-    flow:established,to_server;
+# 1000220 - Base64 encoded data exfil
+alert tcp $HOME_NET any -> any any (
+    msg:"EXFIL Base64 encoded data transfer";
+    flow:established, to_server;
+    http_uri;
     content:"data=";
-    pcre:"/data=[A-Za-z0-9+\/\-_]{50,}/";
-    classtype:policy-violation;
-    sid:1000220;
-    rev:1;
+    sid:1000220; rev:1;
 )
 
-# 1000221 - Sensitive data in cleartext
-drop tcp $HOME_NET any -> any any (
-    msg:"EXFIL Sensitive data in cleartext detected";
+# 1000221 - Sensitive data keywords
+alert tcp $HOME_NET any -> any any (
+    msg:"EXFIL Sensitive data in cleartext";
     flow:established;
-    content:"password";
-    nocase;
-    content:"username";
-    nocase;
-    distance:0;
-    within:100;
-    classtype:policy-violation;
-    sid:1000221;
-    rev:1;
+    content:"password=";
+    sid:1000221; rev:1;
 )
 
 # ---------------------------------------------------------
-# B1. FLOWBITS MULTI-STAGE (SID 1000222-1000224) - HIGH
+# B1. FLOWBITS MULTI-STAGE C2 (SID: 1000222-1000224)
 # Matches system-update.sh multi-stage C2 behavior
 # ---------------------------------------------------------
 
-# 1000222 - C2 registration (stage 1, no alert)
-drop tcp $HOME_NET any -> any any (
+# 1000222 - C2 registration stage 1 (no alert, set flowbit)
+alert tcp $HOME_NET any -> any 8080 (
     msg:"MALWARE C2 beacon registration";
-    flow:established,to_server;
+    flow:established, to_server;
     http_uri;
     content:"/api/register";
     http_header;
     content:"User-Agent: BotClient";
     flowbits:set,c2_registered;
     flowbits:noalert;
-    classtype:trojan-activity;
-    sid:1000222;
-    rev:1;
+    sid:1000222; rev:1;
 )
 
-# 1000223 - C2 active beacon (stage 2, alert if registered)
-drop tcp $HOME_NET any -> any any (
+# 1000223 - C2 active beacon stage 2 (alert only if registered)
+alert tcp $HOME_NET any -> any 8080 (
     msg:"MALWARE C2 active beacon after registration";
-    flow:established,to_server;
+    flow:established, to_server;
     flowbits:isset,c2_registered;
     http_uri;
     content:"/api/check";
-    classtype:trojan-activity;
-    sid:1000223;
-    rev:1;
+    sid:1000223; rev:1;
 )
 
-# 1000224 - C2 command execution (stage 3, system-update.sh /api/exec)
-drop tcp $HOME_NET any -> any any (
-    msg:"MALWARE C2 command execution detected";
-    flow:established,to_server;
+# 1000224 - C2 command execution stage 3
+alert tcp $HOME_NET any -> any 8080 (
+    msg:"MALWARE C2 command execution";
+    flow:established, to_server;
     flowbits:isset,c2_registered;
     http_uri;
     content:"/api/exec";
-    classtype:trojan-activity;
-    sid:1000224;
-    rev:1;
+    sid:1000224; rev:1;
 )
 
 # ---------------------------------------------------------
-# B2. DETECTION FILTER RATE-BASED (SID 1000225-1000226) - MEDIUM
-# Matches network-diagnostic.sh DNS tunneling
+# B2. THRESHOLD / RATE-BASED (SID: 1000225-1000226)
 # ---------------------------------------------------------
 
-# 1000225 - DNS tunneling by volume (network-diagnostic.sh high-rate)
-drop udp $HOME_NET any -> any 53 (
-    msg:"MALWARE DNS tunneling high query rate detected";
-    dsize:>150;
-    detection_filter:track by_src,count 10,seconds 30;
-    classtype:policy-violation;
-    sid:1000225;
-    rev:1;
+# 1000225 - DNS tunneling high query rate
+# Matches network-diagnostic.sh high-rate DNS queries
+alert udp $HOME_NET any -> any 53 (
+    msg:"MALWARE DNS tunneling high query rate";
+    dsize:>100;
+    detection_filter:track by_src, count 10, seconds 30;
+    sid:1000225; rev:1;
 )
 
-# 1000226 - Periodic C2 beacon timing (system-update.sh heartbeat)
-drop tcp $HOME_NET any -> any any (
-    msg:"MALWARE Periodic C2 beacon pattern detected";
-    flow:established,to_server;
+# 1000226 - Periodic C2 beacon timing
+# Matches system-update.sh heartbeat pattern
+alert tcp $HOME_NET any -> any 8080 (
+    msg:"MALWARE Periodic C2 beacon pattern";
+    flow:established, to_server;
     http_uri;
     content:"/heartbeat";
-    detection_filter:track by_src,count 5,seconds 60;
-    classtype:trojan-activity;
-    sid:1000226;
-    rev:1;
+    detection_filter:track by_src, count 3, seconds 60;
+    sid:1000226; rev:1;
 )
 
 # ---------------------------------------------------------
-# B4. PROTOCOL ANOMALY (SID 1000227) - MEDIUM
+# B3. PROTOCOL ANOMALY (SID: 1000227)
+# ---------------------------------------------------------
+
+# 1000227 - DNS query excessive length
 # Matches network-diagnostic.sh oversized DNS queries
-# ---------------------------------------------------------
-
-# 1000227 - Oversized DNS query (network-diagnostic.sh tunneling)
-drop udp $HOME_NET any -> any 53 (
-    msg:"MALWARE DNS query excessive length detected";
-    dsize:>200;
-    content:"|01 00 00 01|";
-    offset:2;
-    depth:4;
-    classtype:policy-violation;
-    sid:1000227;
-    rev:1;
+alert udp $HOME_NET any -> any 53 (
+    msg:"MALWARE DNS query excessive length";
+    dsize:>150;
+    sid:1000227; rev:1;
 )
 
 # ---------------------------------------------------------
-# B3. FILE INSPECTOR (SID 1000228) - HIGH
+# B4. FILE INSPECTOR (SID: 1000228)
 # ---------------------------------------------------------
 
-# 1000228 - PE executable download
-drop tcp $HOME_NET any -> any any (
+# 1000228 - PE executable downloaded
+alert tcp $HOME_NET any -> any any (
     msg:"MALWARE PE executable downloaded";
-    flow:established,to_client;
+    flow:established, to_client;
     file_data;
     content:"|4d 5a|";
-    depth:2;
-    content:"PE|00 00|";
-    distance:58;
-    within:4;
-    classtype:trojan-activity;
-    sid:1000228;
-    rev:1;
+    sid:1000228; rev:1;
 )
 
 # ==========================================
-# END OF CONSOLIDATED RULES
-# ==========================================
-
-# ==========================================
-# DEPLOYMENT INSTRUCTIONS:
-# 
-# On Snort VM:
-#   sudo cp snort3-all-rules.rules /etc/snort/rules/test.rules
-#   sudo pkill snort
-#   sudo snort -Q --daq afpacket -i enp0s3:enp0s8 -c /home/minhiw/snort3/lua/snort.lua -D
-#
-# Verify rules loaded:
-#   sudo snort -c /home/minhiw/snort3/lua/snort.lua --rule-to-text | grep -c "sid:"
-#   (Should show 43 rules)
-# ==========================================
-
-# ==========================================
-# SID MAPPING SUMMARY (must match sid-map.js):
-#
-# SCAN & FLOOD (14 rules):
-#   HIGH (1000001-1000007, 1000008): 8 rules
-#   MEDIUM (1000101-1000107): 7 rules  
-#   LOW (1000100): 1 rule
-#
-# MALWARE (29 rules):
-#   A1. Payload Signatures (1000200-1000205): 6 rules - HIGH
-#   A2. C2 Communication (1000206-1000210): 5 rules - HIGH
-#   A3. Exploit Detection (1000211-1000216): 6 rules - CRITICAL
-#   A4. Ransomware (1000217-1000219): 3 rules - CRITICAL
-#   A5. Data Exfiltration (1000220-1000221): 2 rules - HIGH
-#   B1. Flowbits Multi-stage (1000222-1000224): 3 rules - HIGH
-#   B2. Detection Filter Rate (1000225-1000226): 2 rules - MEDIUM
-#   B3. File Inspector (1000228): 1 rule - HIGH
-#   B4. Protocol Anomaly (1000227): 1 rule - MEDIUM
-#
-# TOTAL: 43 rules
+# END OF RULES
 # ==========================================
