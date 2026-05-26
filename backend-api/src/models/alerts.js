@@ -43,7 +43,7 @@ async function getAlerts({ limit = 20, offset = 0, search = '', severity = '', a
   const total = countResult?.count || 0
 
   const query = `SELECT id, src_ip, dst_ip, dst_port, attack_type, rule_sid, severity, action, proto, count,
-    datetime(last_seen/1000, 'unixepoch') as timestamp, first_seen, last_seen
+    datetime(last_seen/1000, 'unixepoch', '+7 hours') as timestamp, first_seen, last_seen
     FROM alerts_aggregated ${where}
     ORDER BY last_seen DESC LIMIT ? OFFSET ?`
   params.push(safeLimit, safeOffset)
@@ -58,7 +58,7 @@ async function getStats() {
   const bySeverity = await db.all(`SELECT severity, SUM(count) as count FROM alerts_aggregated WHERE severity IS NOT NULL GROUP BY severity`)
   const bySrc = await db.all(`SELECT src_ip, SUM(count) as count FROM alerts_aggregated GROUP BY src_ip ORDER BY count DESC LIMIT 10`)
   const byDst = await db.all(`SELECT dst_ip, SUM(count) as count FROM alerts_aggregated GROUP BY dst_ip ORDER BY count DESC LIMIT 10`)
-  const recent = await db.all(`SELECT attack_type, last_seen FROM alerts_aggregated ORDER BY last_seen DESC LIMIT 100`)
+  const recent = await db.all(`SELECT attack_type, datetime(last_seen/1000, 'unixepoch', '+7 hours') as last_seen FROM alerts_aggregated ORDER BY last_seen DESC LIMIT 100`)
   return { byType, bySeverity, bySrc, byDst, recent }
 }
 

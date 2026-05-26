@@ -332,13 +332,16 @@ function App() {
     }
 
     if (stats && stats.bySrc && stats.bySrc.length > 0) {
-      setTopIPs(stats.bySrc.slice(0, 10).map(item => ({
+      const validIPs = stats.bySrc
+        .filter(item => item.src_ip && /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(item.src_ip))
+        .slice(0, 10);
+      setTopIPs(validIPs.map(item => ({
         ip: item.src_ip,
         count: item.count
       })));
 
-      const topSrcLabels = stats.bySrc.slice(0, 8).map(item => item.src_ip);
-      const topSrcValues = stats.bySrc.slice(0, 8).map(item => item.count);
+      const topSrcLabels = validIPs.slice(0, 8).map(item => item.src_ip);
+      const topSrcValues = validIPs.slice(0, 8).map(item => item.count);
       setBarChartData({
         labels: topSrcLabels,
         datasets: [{
@@ -526,6 +529,15 @@ function App() {
   const closeModal = () => {
     setShowModal(false);
     setSelectedAlert(null);
+  };
+
+  const formatTimestamp = (alert) => {
+    if (alert.timestamp) return alert.timestamp;
+    if (alert.last_seen) {
+      const d = new Date(alert.last_seen + 7 * 3600 * 1000);
+      return d.toISOString().replace('T', ' ').slice(0, 19);
+    }
+    return '-';
   };
 
   const getActionIcon = (action) => {
@@ -941,7 +953,7 @@ function App() {
                       return (
                         <tr key={idx}>
                           <td><span className="row-number">{pagination.offset + idx + 1}</span></td>
-                          <td className="timestamp-cell">{alert.timestamp}</td>
+                          <td className="timestamp-cell">{formatTimestamp(alert)}</td>
                           <td className="src-ip">{alert.src_ip || '-'}</td>
                           <td className="dst-ip">{alert.dst_ip || '-'}</td>
                           <td className="protocol-col"><span className="proto-cell">{alert.proto || '-'}</span></td>
@@ -1004,7 +1016,7 @@ function App() {
                 </div>
                 <div className="detail-item">
                   <label>Time</label>
-                  <span>{selectedAlert.timestamp}</span>
+                  <span>{formatTimestamp(selectedAlert)}</span>
                 </div>
                 <div className="detail-item">
                   <label>Source IP</label>
