@@ -5,6 +5,8 @@ const { handlers } = require('./alerts')
 const apiKeyAuth = require('../middleware/auth')
 const rateLimit = require('express-rate-limit')
 const config = require('../config')
+const fs = require('fs')
+const path = require('path')
 
 const ingestRateLimiter = rateLimit({
   windowMs: parseInt(config.RATE_LIMIT_WINDOW_MS || '60000', 10),
@@ -64,9 +66,17 @@ router.get('/stats/overview', async (req, res) => {
       [todayStart]
     )
 
-    // Tổng rules
-    const rulesCount = await db.get(`SELECT COUNT(DISTINCT attack_type) as c FROM alerts_aggregated WHERE severity = 'high'`)
-    const totalRules = rulesCount ? Math.max(rulesCount.c, 7) : 7
+    // Tổng rules - đọc từ file snort3-all-rules.rules
+    let totalRules = 45 // fallback
+    try {
+      const rulesFilePath = path.join(__dirname, '../../..', 'rules', 'snort3-all-rules.rules')
+      const rulesContent = fs.readFileSync(rulesFilePath, 'utf8')
+      // Đếm số dòng có chứa sid: (các rule thực tế)
+      const ruleLines = rulesContent.split('\n').filter(line => line.match(/sid:\s*\d+/))
+      totalRules = ruleLines.length
+    } catch (err) {
+      console.error('Error reading rules file:', err.message)
+    }
 
     // Tính % so với hôm qua
     const todayCount = todayAttacks?.c || 0
