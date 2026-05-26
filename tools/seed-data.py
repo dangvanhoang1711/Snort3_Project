@@ -29,11 +29,26 @@ SEVERITIES = ['critical', 'high', 'medium', 'low']
 ACTIONS = ['alert', 'drop', 'reject', 'log']
 PROTOCOLS = ['TCP', 'UDP', 'ICMP', 'HTTP', 'HTTPS', 'DNS']
 
-SRC_IPS = [
-    '192.168.1.100', '192.168.1.101', '192.168.1.102',
-    '10.0.0.50', '10.0.0.51', '172.16.0.10',
-    '203.0.113.45', '198.51.100.23', '192.0.2.100'
-]
+def random_ip(prefix=None):
+    if prefix:
+        return f'{prefix}.{random.randint(1, 254)}'
+    return f'{random.randint(1, 223)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(1, 254)}'
+
+# Sinh ngẫu nhiên 25-40 source IPs từ nhiều dải
+def generate_src_ips():
+    count = random.randint(25, 40)
+    ips = set()
+    prefixes = [
+        '192.168.1', '192.168.2', '10.0.0', '10.0.1', '172.16.0',
+        '203.0.113', '198.51.100', '192.0.2', '45.33.32', '104.16.156',
+        '185.220.101', '91.121.0', '51.75.0', '163.172.0', '51.15.0'
+    ]
+    while len(ips) < count:
+        prefix = random.choice(prefixes)
+        ips.add(random_ip(prefix))
+    return list(ips)
+
+SRC_IPS = generate_src_ips()
 
 DST_IPS = [
     '192.168.1.2', '192.168.1.3', '192.168.1.10',

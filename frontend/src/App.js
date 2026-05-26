@@ -66,6 +66,7 @@ const ACTIONS = [
 
 const SEVERITY_LEVELS = [
   { value: '', label: 'All Severities' },
+  { value: 'critical', label: 'Critical' },
   { value: 'high', label: 'High' },
   { value: 'medium', label: 'Medium' },
   { value: 'low', label: 'Low' }
@@ -207,7 +208,7 @@ function App() {
         return next;
       });
       const delta = incoming.delta_count || incoming.count || 1;
-      const isThreat = (incoming.severity || '').toLowerCase() === 'high' && (incoming.action || '').toLowerCase() === 'drop';
+      const isThreat = ['critical', 'high'].includes((incoming.severity || '').toLowerCase());
       setLastUpdate(new Date());
       setOverview((prev) => (prev ? {
         ...prev,
@@ -311,18 +312,19 @@ function App() {
     }
 
     if (stats && stats.bySeverity && stats.bySeverity.length > 0) {
-      const severityCounts = { high: 0, medium: 0, low: 0 };
+      const severityCounts = { critical: 0, high: 0, medium: 0, low: 0 };
       stats.bySeverity.forEach(s => {
         const sev = (s.severity || '').toLowerCase();
-        if (sev === 'high') severityCounts.high += s.count;
+        if (sev === 'critical') severityCounts.critical += s.count;
+        else if (sev === 'high') severityCounts.high += s.count;
         else if (sev === 'medium') severityCounts.medium += s.count;
         else if (sev === 'low') severityCounts.low += s.count;
       });
       setDonutChartData({
-        labels: ['High', 'Medium', 'Low'],
+        labels: ['Critical', 'High', 'Medium', 'Low'],
         datasets: [{
-          data: [severityCounts.high, severityCounts.medium, severityCounts.low],
-          backgroundColor: [COLORS.red, COLORS.yellow, COLORS.green],
+          data: [severityCounts.critical, severityCounts.high, severityCounts.medium, severityCounts.low],
+          backgroundColor: ['#7c1a1a', COLORS.red, COLORS.yellow, COLORS.green],
           borderColor: '#1e293b',
           borderWidth: 2
         }]
@@ -458,7 +460,9 @@ function App() {
   const getSeverityBadge = (sev) => {
     const severity = (sev || '').toLowerCase();
     let bg = '#6b7280', color = '#fff', label = 'Info';
-    if (severity === 'high' || severity === 'danger') {
+    if (severity === 'critical') {
+      bg = '#7c1a1a'; label = 'Critical';
+    } else if (severity === 'high' || severity === 'danger') {
       bg = COLORS.red; label = 'High';
     } else if (severity === 'medium' || severity === 'warning') {
       bg = COLORS.yellow; color = '#000'; label = 'Medium';

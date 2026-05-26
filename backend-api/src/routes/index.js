@@ -29,9 +29,9 @@ router.get('/stats/overview', async (req, res) => {
     // Tổng tất cả events (bao gồm allow + drop - SOC logs everything)
     const totalAgg = await db.get(`SELECT SUM(count) as c FROM alerts_aggregated`)
 
-    // Tổng tấn công hôm nay - CHỈ tính HIGH severity + DROP action (thực sự nguy hiểm)
+    // Tổng tấn công hôm nay = critical + high severity events
     const todayAttacks = await db.get(
-      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND severity = 'high' AND action = 'drop'`,
+      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND severity IN ('critical', 'high')`,
       [todayStart]
     )
 
@@ -56,14 +56,13 @@ router.get('/stats/overview', async (req, res) => {
     // Hôm qua - tấn công
     const yesterdayStart = todayStart - 86400000
     const yesterdayAttacks = await db.get(
-      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND last_seen < ? AND severity = 'high' AND action = 'drop'`,
+      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND last_seen < ? AND severity IN ('critical', 'high')`,
       [yesterdayStart, todayStart]
     )
 
-    // IP tấn công hôm nay (unique IPs với high severity attacks)
+    // IP tấn công — tổng số unique source IPs (all time)
     const bySrc = await db.all(
-      `SELECT src_ip, SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND severity = 'high' AND action = 'drop' GROUP BY src_ip ORDER BY c DESC`,
-      [todayStart]
+      `SELECT src_ip, SUM(count) as c FROM alerts_aggregated GROUP BY src_ip ORDER BY c DESC`
     )
 
     // Tổng rules - đọc từ file snort3-all-rules.rules
