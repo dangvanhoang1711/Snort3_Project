@@ -193,14 +193,36 @@ class StreamForwarder {
     const parts = line.split(',')
     if (parts.length < 7) return
 
-    const alert = {
-      src_ip: parts[0]?.trim() || 'unknown',
-      dst_ip: parts[1]?.trim() || 'unknown',
-      dst_port: parts[2]?.trim() || null,
-      attack_type: parts[3]?.trim() || 'Unknown',
-      severity: parts[4]?.trim() || 'medium',
-      action: parts[5]?.trim() || 'alert',
-      proto: parts[6]?.trim() || 'TCP',
+    // Detect format: Snort full CSV (10 fields) vs simplified (6-8 fields)
+    // Full: timestamp,pkt_num,proto,pkt_gen,pkt_len,dir,src_ap,dst_ap,rule,action
+    // Simplified: src_ip,dst_ip,dst_port,attack_type,severity,action,proto,count
+    const isSnortFullFormat = parts.length >= 10 || parts[0]?.includes('/')
+
+    let alert
+    if (isSnortFullFormat) {
+      // Full Snort CSV: timestamp, pkt_num, proto, pkt_gen, pkt_len, dir, src_ap, dst_ap, rule, action
+      const srcAp = parts[6]?.trim() || ''
+      const dstAp = parts[7]?.trim() || ''
+      alert = {
+        src_ip: srcAp.includes(':') ? srcAp.split(':')[0] : srcAp || 'unknown',
+        dst_ip: dstAp.includes(':') ? dstAp.split(':')[0] : dstAp || 'unknown',
+        dst_port: srcAp.includes(':') ? srcAp.split(':')[1]?.trim() || null : null,
+        attack_type: parts[8]?.trim() || 'Unknown',
+        severity: 'medium',
+        action: parts[9]?.trim().toLowerCase() || 'alert',
+        proto: parts[2]?.trim() || 'TCP',
+      }
+    } else {
+      // Simplified format: src_ip, dst_ip, dst_port, attack_type, severity, action, proto, count
+      alert = {
+        src_ip: parts[0]?.trim() || 'unknown',
+        dst_ip: parts[1]?.trim() || 'unknown',
+        dst_port: parts[2]?.trim() || null,
+        attack_type: parts[3]?.trim() || 'Unknown',
+        severity: parts[4]?.trim() || 'medium',
+        action: parts[5]?.trim() || 'alert',
+        proto: parts[6]?.trim() || 'TCP',
+      }
     }
 
     if (!alert.src_ip || alert.src_ip === 'unknown') return
