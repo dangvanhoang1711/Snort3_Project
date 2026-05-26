@@ -12,6 +12,7 @@ const SID_MAP = new Map([
   [1000005, { attack_type: 'Stealth Scan Detected', severity: 'high' }],
   [1000006, { attack_type: 'SYN Flood Detected', severity: 'high' }],
   [1000007, { attack_type: 'Port Scan Detected', severity: 'high' }],
+  [1000008, { attack_type: 'MALWARE-CNC C&C Connection Attempt Detected', severity: 'high' }],
   
   // Additional rules - MEDIUM severity
   [1000101, { attack_type: 'ICMP Sweep Detected', severity: 'medium' }],
@@ -20,6 +21,7 @@ const SID_MAP = new Map([
   [1000104, { attack_type: 'DNS Query Anomaly', severity: 'medium' }],
   [1000105, { attack_type: 'ARP Spoofing Detected', severity: 'medium' }],
   [1000106, { attack_type: 'Ping of Death Detected', severity: 'medium' }],
+  [1000107, { attack_type: 'SSH Brute Force Attempt Detected', severity: 'medium' }],
 
   // ==========================================
   // MALWARE DETECTION RULES (SID 1000200-1000228)
@@ -82,12 +84,14 @@ const ATTACK_TYPE_TO_SID = new Map([
   ['Stealth Scan Detected', 1000005],
   ['SYN Flood Detected', 1000006],
   ['Port Scan Detected', 1000007],
+  ['MALWARE-CNC C&C Connection Attempt Detected', 1000008],
   ['ICMP Sweep Detected', 1000101],
   ['ICMP Flood Detected', 1000102],
   ['UDP Flood Detected', 1000103],
   ['DNS Query Anomaly', 1000104],
   ['ARP Spoofing Detected', 1000105],
   ['Ping of Death Detected', 1000106],
+  ['SSH Brute Force Attempt Detected', 1000107],
   
   // Malware Detection Rules
   ['EICAR Test File', 1000200],

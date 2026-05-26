@@ -1,14 +1,177 @@
 # ==========================================
-# MALWARE DETECTION RULES - Snort3 Syntax
+# SNORT3 CONSOLIDATED RULES - Mini-SOC IDS/IPS
+# Generated: 2025-05-26
+# Total Rules: 43 (14 scan/flood + 29 malware)
+# SID Range: 1000001-1000228
+# All SID mappings must match backend-api/src/services/sid-map.js
+# ==========================================
+
+# ==========================================
+# SECTION 1: SCAN & FLOOD DETECTION
+# SID Range: 1000001-1000007, 1000100-1000107, 1000008
+# Direction: External -> Victim (192.168.2.0/24)
+# ==========================================
+
+# ---------------------------------------------------------
+# HIGH SEVERITY SCANS (SID: 1000001-1000007)
+# ---------------------------------------------------------
+
+# 1000001 - SYN Scan Detected
+drop tcp any any -> 192.168.2.0/24 any (
+    msg:"SYN Scan Detected";
+    flags:S;
+    flow:stateless;
+    detection_filter:track by_src,count 20,seconds 3;
+    sid:1000001;
+    rev:1;
+)
+
+# 1000002 - NULL Scan Detected
+drop tcp any any -> 192.168.2.0/24 any (
+    msg:"NULL Scan Detected";
+    flags:0;
+    flow:stateless;
+    sid:1000002;
+    rev:1;
+)
+
+# 1000003 - XMAS Scan Detected
+drop tcp any any -> 192.168.2.0/24 any (
+    msg:"XMAS Scan Detected";
+    flags:FPU;
+    flow:stateless;
+    sid:1000003;
+    rev:1;
+)
+
+# 1000004 - FIN Scan Detected
+drop tcp any any -> 192.168.2.0/24 any (
+    msg:"FIN Scan Detected";
+    flags:F;
+    flow:stateless;
+    sid:1000004;
+    rev:1;
+)
+
+# 1000005 - Stealth Scan Detected
+drop tcp any any -> 192.168.2.0/24 any (
+    msg:"Stealth Scan Detected";
+    flags:SF;
+    flow:stateless;
+    sid:1000005;
+    rev:1;
+)
+
+# 1000006 - SYN Flood Detected
+drop tcp any any -> 192.168.2.0/24 any (
+    msg:"SYN Flood Detected";
+    flags:S;
+    flow:stateless;
+    detection_filter:track by_src,count 50,seconds 1;
+    sid:1000006;
+    rev:1;
+)
+
+# 1000007 - Port Scan Detected
+drop tcp any any -> 192.168.2.0/24 any (
+    msg:"Port Scan Detected";
+    flags:S;
+    flow:stateless;
+    detection_filter:track by_src,count 100,seconds 10;
+    sid:1000007;
+    rev:1;
+)
+
+# 1000008 - MALWARE-CNC Backdoor Connection
+drop tcp any any -> any 9999 (
+    msg:"MALWARE-CNC C&C Connection Attempt Detected";
+    sid:1000008;
+    rev:1;
+)
+
+# ---------------------------------------------------------
+# MEDIUM SEVERITY FLOODS (SID: 1000101-1000107)
+# ---------------------------------------------------------
+
+# 1000101 - ICMP Sweep Detected
+drop icmp any any -> 192.168.2.0/24 any (
+    msg:"ICMP Sweep Detected";
+    itype:8;
+    detection_filter:track by_src,count 30,seconds 5;
+    sid:1000101;
+    rev:1;
+)
+
+# 1000102 - ICMP Flood Detected
+drop icmp any any -> 192.168.2.0/24 any (
+    msg:"ICMP Flood Detected";
+    detection_filter:track by_src,count 50,seconds 1;
+    sid:1000102;
+    rev:1;
+)
+
+# 1000103 - UDP Flood Detected
+drop udp any any -> 192.168.2.0/24 any (
+    msg:"UDP Flood Detected";
+    detection_filter:track by_src,count 100,seconds 2;
+    sid:1000103;
+    rev:1;
+)
+
+# 1000104 - DNS Query Anomaly
+alert udp any any -> 192.168.2.0/24 53 (
+    msg:"DNS Query Anomaly";
+    sid:1000104;
+    rev:1;
+)
+
+# 1000105 - ARP Spoofing Detected
+alert arp any any -> 192.168.2.0/24 any (
+    msg:"ARP Spoofing Detected";
+    sid:1000105;
+    rev:1;
+)
+
+# 1000106 - Ping of Death Detected
+drop icmp any any -> 192.168.2.0/24 any (
+    msg:"Ping of Death Detected";
+    icode:0;
+    itype:8;
+    sid:1000106;
+    rev:1;
+)
+
+# 1000107 - SSH Brute Force Attempt Detected
+drop tcp any any -> any 22 (
+    msg:"SSH Brute Force Attempt Detected";
+    detection_filter:track by_src, count 5, seconds 10;
+    sid:1000107;
+    rev:1;
+)
+
+# ---------------------------------------------------------
+# LOW SEVERITY (SID: 1000100)
+# ---------------------------------------------------------
+
+# 1000100 - ICMP Ping Allowed
+pass icmp any any -> 192.168.2.0/24 any (
+    msg:"ICMP Ping Allowed";
+    itype:8;
+    sid:1000100;
+    rev:1;
+)
+
+# ==========================================
+# SECTION 2: MALWARE DETECTION
 # SID Range: 1000200-1000228 (29 rules)
 # Direction: Victim ($HOME_NET) outbound to external
-# Pattern-based: 70% | Behavioral: 30%
-# All malware rules use DROP action
+# Matches stealth malware scripts:
+#   - system-update.sh (C2 beacon/command execution)
+#   - network-diagnostic.sh (DNS tunneling/exfiltration)
 # ==========================================
 
 # ---------------------------------------------------------
 # A1. PAYLOAD SIGNATURES (SID 1000200-1000205) - HIGH
-# Pattern-based detection of malicious payloads
 # ---------------------------------------------------------
 
 # 1000200 - EICAR test file signature
@@ -94,8 +257,7 @@ drop tcp $HOME_NET any -> any any (
 
 # ---------------------------------------------------------
 # A2. C2 COMMUNICATION (SID 1000206-1000210) - HIGH
-# Pattern-based detection of C2 traffic (victim -> Kali C2)
-# Matches system-update.sh traffic to 192.168.1.2:8080
+# Matches system-update.sh traffic to Kali C2 (192.168.1.2:8080)
 # ---------------------------------------------------------
 
 # 1000206 - Cobalt Strike beacon pattern
@@ -111,7 +273,7 @@ drop tcp $HOME_NET any -> any any (
     rev:1;
 )
 
-# 1000207 - Suspicious bot User-Agent (system-update.sh uses this)
+# 1000207 - Suspicious bot User-Agent (system-update.sh)
 drop tcp $HOME_NET any -> any any (
     msg:"MALWARE Suspicious bot User-Agent detected";
     flow:established,to_server;
@@ -157,7 +319,6 @@ drop tcp $HOME_NET any -> any any (
 
 # ---------------------------------------------------------
 # A3. EXPLOIT DETECTION (SID 1000211-1000216) - CRITICAL
-# Pattern-based detection of exploitation attempts
 # ---------------------------------------------------------
 
 # 1000211 - Shellshock exploit
@@ -236,7 +397,6 @@ drop tcp $HOME_NET any -> any any (
 
 # ---------------------------------------------------------
 # A4. RANSOMWARE INDICATORS (SID 1000217-1000219) - CRITICAL
-# Pattern-based detection of ransomware behavior
 # ---------------------------------------------------------
 
 # 1000217 - Ransomware note keywords
@@ -285,8 +445,7 @@ drop tcp $HOME_NET any -> any any (
 
 # ---------------------------------------------------------
 # A5. DATA EXFILTRATION (SID 1000220-1000221) - HIGH
-# Pattern-based detection of data exfiltration
-# Matches network-diagnostic.sh HTTP exfil
+# Matches network-diagnostic.sh HTTP exfiltration
 # ---------------------------------------------------------
 
 # 1000220 - Base64 encoded data exfiltration (network-diagnostic.sh)
@@ -317,7 +476,6 @@ drop tcp $HOME_NET any -> any any (
 
 # ---------------------------------------------------------
 # B1. FLOWBITS MULTI-STAGE (SID 1000222-1000224) - HIGH
-# Behavioral detection using stateful tracking
 # Matches system-update.sh multi-stage C2 behavior
 # ---------------------------------------------------------
 
@@ -362,11 +520,10 @@ drop tcp $HOME_NET any -> any any (
 
 # ---------------------------------------------------------
 # B2. DETECTION FILTER RATE-BASED (SID 1000225-1000226) - MEDIUM
-# Behavioral detection using rate/volume thresholds
 # Matches network-diagnostic.sh DNS tunneling
 # ---------------------------------------------------------
 
-# 1000225 - DNS tunneling by volume (network-diagnostic.sh high-rate queries)
+# 1000225 - DNS tunneling by volume (network-diagnostic.sh high-rate)
 drop udp $HOME_NET any -> any 53 (
     msg:"MALWARE DNS tunneling high query rate detected";
     dsize:>150;
@@ -390,7 +547,6 @@ drop tcp $HOME_NET any -> any any (
 
 # ---------------------------------------------------------
 # B4. PROTOCOL ANOMALY (SID 1000227) - MEDIUM
-# Behavioral detection of protocol violations
 # Matches network-diagnostic.sh oversized DNS queries
 # ---------------------------------------------------------
 
@@ -408,7 +564,6 @@ drop udp $HOME_NET any -> any 53 (
 
 # ---------------------------------------------------------
 # B3. FILE INSPECTOR (SID 1000228) - HIGH
-# Behavioral detection using file analysis
 # ---------------------------------------------------------
 
 # 1000228 - PE executable download
@@ -427,22 +582,40 @@ drop tcp $HOME_NET any -> any any (
 )
 
 # ==========================================
-# END OF MALWARE DETECTION RULES
+# END OF CONSOLIDATED RULES
 # ==========================================
 
 # ==========================================
-# SID MAPPING REFERENCE (must match sid-map.js):
+# DEPLOYMENT INSTRUCTIONS:
 # 
-# PATTERN-BASED (21 rules):
-#   A1. Payload Signatures (1000200-1000205) - HIGH
-#   A2. C2 Communication (1000206-1000210) - HIGH
-#   A3. Exploit Detection (1000211-1000216) - CRITICAL
-#   A4. Ransomware Indicators (1000217-1000219) - CRITICAL
-#   A5. Data Exfiltration (1000220-1000221) - HIGH
+# On Snort VM:
+#   sudo cp snort3-all-rules.rules /etc/snort/rules/test.rules
+#   sudo pkill snort
+#   sudo snort -Q --daq afpacket -i enp0s3:enp0s8 -c /home/minhiw/snort3/lua/snort.lua -D
 #
-# BEHAVIORAL (8 rules):
-#   B1. Flowbits Multi-stage (1000222-1000224) - HIGH
-#   B2. Detection Filter Rate (1000225-1000226) - MEDIUM
-#   B3. File Inspector (1000228) - HIGH
-#   B4. Protocol Anomaly (1000227) - MEDIUM
+# Verify rules loaded:
+#   sudo snort -c /home/minhiw/snort3/lua/snort.lua --rule-to-text | grep -c "sid:"
+#   (Should show 43 rules)
+# ==========================================
+
+# ==========================================
+# SID MAPPING SUMMARY (must match sid-map.js):
+#
+# SCAN & FLOOD (14 rules):
+#   HIGH (1000001-1000007, 1000008): 8 rules
+#   MEDIUM (1000101-1000107): 7 rules  
+#   LOW (1000100): 1 rule
+#
+# MALWARE (29 rules):
+#   A1. Payload Signatures (1000200-1000205): 6 rules - HIGH
+#   A2. C2 Communication (1000206-1000210): 5 rules - HIGH
+#   A3. Exploit Detection (1000211-1000216): 6 rules - CRITICAL
+#   A4. Ransomware (1000217-1000219): 3 rules - CRITICAL
+#   A5. Data Exfiltration (1000220-1000221): 2 rules - HIGH
+#   B1. Flowbits Multi-stage (1000222-1000224): 3 rules - HIGH
+#   B2. Detection Filter Rate (1000225-1000226): 2 rules - MEDIUM
+#   B3. File Inspector (1000228): 1 rule - HIGH
+#   B4. Protocol Anomaly (1000227): 1 rule - MEDIUM
+#
+# TOTAL: 43 rules
 # ==========================================
