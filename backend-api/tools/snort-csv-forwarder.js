@@ -17,7 +17,12 @@ const CONFIG = {
 const logger = {
   info: (...args) => console.log('[INFO]', new Date().toISOString(), ...args),
   warn: (...args) => console.warn('[WARN]', new Date().toISOString(), ...args),
-  error: (...args) => console.error('[ERROR]', new Date().toISOString(), ...args)
+  error: (...args) => console.error('[ERROR]', new Date().toISOString(), ...args),
+  debug: (...args) => {
+    if (process.env.DEBUG_FORWARDER === 'true') {
+      console.log('[DEBUG]', new Date().toISOString(), ...args)
+    }
+  }
 }
 
 let lastPosition = 0
@@ -151,7 +156,7 @@ async function processFile() {
     logger.info(`Processing ${lines.length} new lines (file: ${currentFileSize}, pos: ${lastPosition}->${newPosition})`)
     
     const result = await sendToApi(lines)
-    logger.info(`Sent to API: ${result.inserted || '?'} alerts inserted`)
+    logger.info(`Sent to API: ${result.processed || 0} alerts processed, ${result.buffered || 0} buffered`)
     
     savePosition(newPosition, currentFileSize)
     lastFileSize = currentFileSize

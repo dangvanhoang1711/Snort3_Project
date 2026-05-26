@@ -1,32 +1,26 @@
-const { getDb } = require('./src/db')
-require('./src/db/migrate')
-
-const SID_MAP = {
-  1000100: { attack_type: 'ICMP Ping Allowed', severity: 'low' },
-  1000001: { attack_type: 'SYN Scan Detected', severity: 'high' },
-  1000002: { attack_type: 'NULL Scan Detected', severity: 'high' },
-  1000003: { attack_type: 'XMAS Scan Detected', severity: 'high' },
-  1000004: { attack_type: 'FIN Scan Detected', severity: 'high' },
-  1000005: { attack_type: 'Stealth Scan Detected', severity: 'high' },
-  1000006: { attack_type: 'SYN Flood Detected', severity: 'high' },
-  1000007: { attack_type: 'Port Scan Detected', severity: 'high' },
-}
+const { initDb, getDb } = require('./backend-api/src/db')
+const { SID_MAP } = require('./backend-api/src/services/sid-map')
 
 async function migrateAttackTypes() {
+  await initDb()
   const db = getDb()
-  console.log('Migrating attack types...')
-  
   let updated = 0
-  for (const [sid, info] of Object.entries(SID_MAP)) {
+
+  for (const [sid, info] of SID_MAP.entries()) {
     const result = await db.run(
       'UPDATE alerts SET attack_type = ?, severity = ? WHERE rule_sid = ?',
-      [info.attack_type, info.severity.toLowerCase(), parseInt(sid)]
+      [info.attack_type, info.severity.toLowerCase(), sid]
     )
     updated += result.changes
     console.log(`Updated SID ${sid}: ${info.attack_type}`)
   }
-  
+
   console.log(`Total updated: ${updated} rows`)
 }
 
-migrateAttackTypes().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); })
+migrateAttackTypes()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })

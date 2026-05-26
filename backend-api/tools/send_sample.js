@@ -5,16 +5,18 @@ const http = require('http')
 const file = process.argv[2] || path.join(__dirname, '..', 'docs', 'SAMPLE_LOGS.md')
 const host = process.argv[3] || 'localhost'
 const port = process.argv[4] || 4000
+const apiKey = process.env.API_KEY || 'demo-key'
 
 const data = fs.readFileSync(file, 'utf8').split('\n').filter(Boolean).slice(-5).join('\n')
 
 const options = {
   hostname: host,
   port: port,
-  path: '/api/logs',
+    path: '/api/ingest',
   method: 'POST',
   headers: {
     'Content-Type': 'text/plain',
+    'X-API-Key': apiKey,
     'Content-Length': Buffer.byteLength(data),
   },
 }

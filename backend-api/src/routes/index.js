@@ -5,6 +5,8 @@ const { handlers } = require('./alerts')
 const apiKeyAuth = require('../middleware/auth')
 const rateLimit = require('express-rate-limit')
 const config = require('../config')
+const fs = require('fs')
+const path = require('path')
 
 const ingestRateLimiter = rateLimit({
   windowMs: parseInt(config.RATE_LIMIT_WINDOW_MS || '60000', 10),
@@ -20,14 +22,16 @@ const { getStats } = require('../models/alerts')
 router.get('/stats/overview', async (req, res) => {
   try {
     const db = require('../db').getDb()
-    const todayStart = Math.floor(Date.now() / 86400000) * 86400000
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const todayStart = today.getTime()
 
     // Tổng tất cả events (bao gồm allow + drop - SOC logs everything)
     const totalAgg = await db.get(`SELECT SUM(count) as c FROM alerts_aggregated`)
 
-    // Tổng tấn công hôm nay - CHỈ tính HIGH severity + DROP action (thực sự nguy hiểm)
+    // Tổng tấn công hôm nay = critical + high severity events
     const todayAttacks = await db.get(
-      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND severity = 'high' AND action = 'drop'`,
+      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND severity IN ('critical', 'high')`,
       [todayStart]
     )
 
@@ -39,7 +43,7 @@ router.get('/stats/overview', async (req, res) => {
 
     // Allowed traffic hôm nay
     const todayAllowed = await db.get(
-      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND action = 'allow'`,
+      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND action = 'pass'`,
       [todayStart]
     )
 
@@ -52,19 +56,26 @@ router.get('/stats/overview', async (req, res) => {
     // Hôm qua - tấn công
     const yesterdayStart = todayStart - 86400000
     const yesterdayAttacks = await db.get(
-      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND last_seen < ? AND severity = 'high' AND action = 'drop'`,
+      `SELECT SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND last_seen < ? AND severity IN ('critical', 'high')`,
       [yesterdayStart, todayStart]
     )
 
-    // IP tấn công hôm nay (unique IPs với high severity attacks)
+    // IP tấn công — tổng số unique source IPs (all time)
     const bySrc = await db.all(
-      `SELECT src_ip, SUM(count) as c FROM alerts_aggregated WHERE last_seen >= ? AND severity = 'high' AND action = 'drop' GROUP BY src_ip ORDER BY c DESC`,
-      [todayStart]
+      `SELECT src_ip, SUM(count) as c FROM alerts_aggregated GROUP BY src_ip ORDER BY c DESC`
     )
 
-    // Tổng rules
-    const rulesCount = await db.get(`SELECT COUNT(DISTINCT attack_type) as c FROM alerts_aggregated WHERE severity = 'high'`)
-    const totalRules = rulesCount ? Math.max(rulesCount.c, 7) : 7
+    // Tổng rules - đọc từ file snort3-all-rules.rules
+    let totalRules = 45 // fallback
+    try {
+      const rulesFilePath = path.join(__dirname, '../../..', 'rules', 'snort3-all-rules.rules')
+      const rulesContent = fs.readFileSync(rulesFilePath, 'utf8')
+      // Đếm số dòng có chứa sid: (các rule thực tế)
+      const ruleLines = rulesContent.split('\n').filter(line => line.match(/sid:\s*\d+/))
+      totalRules = ruleLines.length
+    } catch (err) {
+      console.error('Error reading rules file:', err.message)
+    }
 
     // Tính % so với hôm qua
     const todayCount = todayAttacks?.c || 0
@@ -106,14 +117,16 @@ router.get('/stats/hourly', async (req, res) => {
   try {
     const db = require('../db').getDb()
     const results = []
-    const now = Date.now()
+    const currentHour = new Date()
+    currentHour.setMinutes(0, 0, 0)
+    const currentHourStart = currentHour.getTime()
     
     for (let i = 0; i < 24; i++) {
-      const hourStart = now - (i * 3600000)
+      const hourStart = currentHourStart - (i * 3600000)
       const hourEnd = hourStart + 3600000
       const row = await db.get(
         `SELECT SUM(count) as count FROM alerts_aggregated WHERE last_seen >= ? AND last_seen < ?`,
-        [hourEnd - 3600000, hourEnd]
+        [hourStart, hourEnd]
       )
       const hourLabel = new Date(hourStart).getHours().toString().padStart(2, '0')
       results.unshift({ hour: `${hourLabel}:00`, count: row?.count || 0 })

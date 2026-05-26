@@ -17,7 +17,7 @@ const ATTACK_TYPES = [
   { attack_type: 'ARP Spoofing Detected', severity: 'medium', action: 'drop', sid: 1000105 },
   { attack_type: 'Ping of Death Detected', severity: 'medium', action: 'drop', sid: 1000106 },
   // LOW severity
-  { attack_type: 'ICMP Ping Allowed', severity: 'low', action: 'allow', sid: 1000100 },
+  { attack_type: 'ICMP Ping Allowed', severity: 'low', action: 'pass', sid: 1000100 },
 ]
 
 const SOURCE_IPS = [
@@ -103,7 +103,7 @@ async function main() {
     }
   }
 
-  console.log('\n✅ Test data generation complete!')
+  console.log('\nTest data generation complete!')
   console.log(`Total alerts sent: ${sent}`)
 }
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Robust forwarder: tail -F a snort alert file and batch POST to backend
- * Usage: node forwarder.js /var/log/snort/alert_csv.log http://backend:4000/api/logs YOUR_API_KEY
+ * Usage: node forwarder.js /var/log/snort/alert_csv.log http://backend:4000/api/ingest YOUR_API_KEY
  */
 const { spawn } = require('child_process')
 const axios = require('axios')

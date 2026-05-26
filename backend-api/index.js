@@ -35,6 +35,12 @@ if (config.RATE_LIMIT_WINDOW_MS && config.RATE_LIMIT_MAX) {
 app.use('/api', routes)
 
 // Health
+app.get('/', (req, res) => res.json({
+  service: 'Mini-SOC Snort3 Backend',
+  status: 'ok',
+  health: '/health',
+  api: '/api'
+}))
 app.get('/health', (req, res) => res.json({ status: 'ok' }))
 
 // Error handler (last)
