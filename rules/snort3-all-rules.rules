@@ -135,9 +135,10 @@ drop icmp any any -> $HOME_NET any (
 )
 
 # 1000107 - SSH Brute Force Attempt Detected
-drop tcp any any -> $HOME_NET 22 (
+drop tcp any any -> any 22 (
     msg:"SSH Brute Force Attempt Detected";
-    flow:established, to_server;
+    flags:S;
+    flow:stateless;
     detection_filter:track by_src, count 5, seconds 10;
     sid:1000107; rev:1;
 )
