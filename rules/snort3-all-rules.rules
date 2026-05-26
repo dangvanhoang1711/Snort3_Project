@@ -209,8 +209,8 @@ alert tcp $HOME_NET any -> any any (
 # ---------------------------------------------------------
 
 # 1000206 - Cobalt Strike beacon pattern
-alert tcp $HOME_NET any -> any 8080 (
-    msg:"MALWARE Cobalt Strike beacon pattern";
+drop tcp $HOME_NET any -> any 8080 (
+    msg:"MALWARE Cobalt Strike beacon pattern detected";
     flow:established, to_server;
     http_header;
     content:"User-Agent: Mozilla/5.0 (compatible; MSIE";
@@ -220,8 +220,8 @@ alert tcp $HOME_NET any -> any 8080 (
 )
 
 # 1000207 - Suspicious bot User-Agent
-alert tcp $HOME_NET any -> any 8080 (
-    msg:"MALWARE Suspicious bot User-Agent";
+drop tcp $HOME_NET any -> any 8080 (
+    msg:"MALWARE Suspicious bot User-Agent detected";
     flow:established, to_server;
     http_header;
     content:"User-Agent: BotClient";
@@ -229,8 +229,8 @@ alert tcp $HOME_NET any -> any 8080 (
 )
 
 # 1000208 - C2 check-in URI pattern
-alert tcp $HOME_NET any -> any 8080 (
-    msg:"MALWARE C2 check-in URI pattern";
+drop tcp $HOME_NET any -> any 8080 (
+    msg:"MALWARE C2 check-in URI pattern detected";
     flow:established, to_server;
     http_uri;
     content:"/api/check";
@@ -238,8 +238,8 @@ alert tcp $HOME_NET any -> any 8080 (
 )
 
 # 1000209 - C2 registration URI
-alert tcp $HOME_NET any -> any 8080 (
-    msg:"MALWARE C2 registration attempt";
+drop tcp $HOME_NET any -> any 8080 (
+    msg:"MALWARE C2 registration attempt detected";
     flow:established, to_server;
     http_uri;
     content:"/api/register";
@@ -247,10 +247,11 @@ alert tcp $HOME_NET any -> any 8080 (
 )
 
 # 1000210 - Suspicious POST to root
-alert tcp $HOME_NET any -> any 8080 (
-    msg:"MALWARE Suspicious POST to root path";
+drop tcp $HOME_NET any -> any 8080 (
+    msg:"MALWARE Suspicious POST to root path detected";
     flow:established, to_server;
-    content:"POST / HTTP/1.1";
+    content:"POST / HTTP";
+    depth:12;
     sid:1000210; rev:1;
 )
 
@@ -366,36 +367,38 @@ alert tcp $HOME_NET any -> any any (
 # Matches system-update.sh multi-stage C2 behavior
 # ---------------------------------------------------------
 
-# 1000222 - C2 registration stage 1 (no alert, set flowbit)
-alert tcp $HOME_NET any -> any 8080 (
-    msg:"MALWARE C2 beacon registration";
+# 1000222 - C2 registration stage 1 (set flowbit, generate alert)
+drop tcp $HOME_NET any -> any any (
+    msg:"MALWARE C2 beacon registration detected";
     flow:established, to_server;
     http_uri;
     content:"/api/register";
     http_header;
     content:"User-Agent: BotClient";
     flowbits:set,c2_registered;
-    flowbits:noalert;
+    classtype:trojan-activity;
     sid:1000222; rev:1;
 )
 
 # 1000223 - C2 active beacon stage 2 (alert only if registered)
-alert tcp $HOME_NET any -> any 8080 (
+drop tcp $HOME_NET any -> any any (
     msg:"MALWARE C2 active beacon after registration";
     flow:established, to_server;
     flowbits:isset,c2_registered;
     http_uri;
     content:"/api/check";
+    classtype:trojan-activity;
     sid:1000223; rev:1;
 )
 
 # 1000224 - C2 command execution stage 3
-alert tcp $HOME_NET any -> any 8080 (
-    msg:"MALWARE C2 command execution";
+drop tcp $HOME_NET any -> any any (
+    msg:"MALWARE C2 command execution detected";
     flow:established, to_server;
     flowbits:isset,c2_registered;
     http_uri;
     content:"/api/exec";
+    classtype:trojan-activity;
     sid:1000224; rev:1;
 )
 
@@ -414,11 +417,12 @@ alert udp $HOME_NET any -> any 53 (
 
 # 1000226 - Periodic C2 beacon timing
 # Matches system-update.sh heartbeat pattern
-alert tcp $HOME_NET any -> any 8080 (
-    msg:"MALWARE Periodic C2 beacon pattern";
+drop tcp $HOME_NET any -> any any (
+    msg:"MALWARE Periodic C2 beacon pattern detected";
     flow:established, to_server;
     http_uri;
     content:"/heartbeat";
+    classtype:trojan-activity;
     detection_filter:track by_src, count 3, seconds 60;
     sid:1000226; rev:1;
 )
