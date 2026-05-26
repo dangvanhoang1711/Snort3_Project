@@ -9,7 +9,7 @@
 # ==========================================
 # SECTION 1: SCAN & FLOOD DETECTION
 # SID Range: 1000001-1000007, 1000100-1000107, 1000008
-# Direction: External -> Victim (192.168.2.0/24)
+# Direction: External -> Victim ($HOME_NET)
 # ==========================================
 
 # ---------------------------------------------------------
@@ -17,7 +17,7 @@
 # ---------------------------------------------------------
 
 # 1000001 - SYN Scan Detected
-drop tcp any any -> 192.168.2.0/24 any (
+drop tcp any any -> $HOME_NET any (
     msg:"SYN Scan Detected";
     flags:S;
     flow:stateless;
@@ -27,7 +27,7 @@ drop tcp any any -> 192.168.2.0/24 any (
 )
 
 # 1000002 - NULL Scan Detected
-drop tcp any any -> 192.168.2.0/24 any (
+drop tcp any any -> $HOME_NET any (
     msg:"NULL Scan Detected";
     flags:0;
     flow:stateless;
@@ -36,7 +36,7 @@ drop tcp any any -> 192.168.2.0/24 any (
 )
 
 # 1000003 - XMAS Scan Detected
-drop tcp any any -> 192.168.2.0/24 any (
+drop tcp any any -> $HOME_NET any (
     msg:"XMAS Scan Detected";
     flags:FPU;
     flow:stateless;
@@ -45,7 +45,7 @@ drop tcp any any -> 192.168.2.0/24 any (
 )
 
 # 1000004 - FIN Scan Detected
-drop tcp any any -> 192.168.2.0/24 any (
+drop tcp any any -> $HOME_NET any (
     msg:"FIN Scan Detected";
     flags:F;
     flow:stateless;
@@ -54,7 +54,7 @@ drop tcp any any -> 192.168.2.0/24 any (
 )
 
 # 1000005 - Stealth Scan Detected
-drop tcp any any -> 192.168.2.0/24 any (
+drop tcp any any -> $HOME_NET any (
     msg:"Stealth Scan Detected";
     flags:SF;
     flow:stateless;
@@ -63,7 +63,7 @@ drop tcp any any -> 192.168.2.0/24 any (
 )
 
 # 1000006 - SYN Flood Detected
-drop tcp any any -> 192.168.2.0/24 any (
+drop tcp any any -> $HOME_NET any (
     msg:"SYN Flood Detected";
     flags:S;
     flow:stateless;
@@ -73,7 +73,7 @@ drop tcp any any -> 192.168.2.0/24 any (
 )
 
 # 1000007 - Port Scan Detected
-drop tcp any any -> 192.168.2.0/24 any (
+drop tcp any any -> $HOME_NET any (
     msg:"Port Scan Detected";
     flags:S;
     flow:stateless;
@@ -94,7 +94,7 @@ drop tcp any any -> any 9999 (
 # ---------------------------------------------------------
 
 # 1000101 - ICMP Sweep Detected
-drop icmp any any -> 192.168.2.0/24 any (
+drop icmp any any -> $HOME_NET any (
     msg:"ICMP Sweep Detected";
     itype:8;
     detection_filter:track by_src,count 30,seconds 5;
@@ -103,7 +103,7 @@ drop icmp any any -> 192.168.2.0/24 any (
 )
 
 # 1000102 - ICMP Flood Detected
-drop icmp any any -> 192.168.2.0/24 any (
+drop icmp any any -> $HOME_NET any (
     msg:"ICMP Flood Detected";
     detection_filter:track by_src,count 50,seconds 1;
     sid:1000102;
@@ -111,7 +111,7 @@ drop icmp any any -> 192.168.2.0/24 any (
 )
 
 # 1000103 - UDP Flood Detected
-drop udp any any -> 192.168.2.0/24 any (
+drop udp any any -> $HOME_NET any (
     msg:"UDP Flood Detected";
     detection_filter:track by_src,count 100,seconds 2;
     sid:1000103;
@@ -119,21 +119,21 @@ drop udp any any -> 192.168.2.0/24 any (
 )
 
 # 1000104 - DNS Query Anomaly
-alert udp any any -> 192.168.2.0/24 53 (
+alert udp any any -> $HOME_NET 53 (
     msg:"DNS Query Anomaly";
     sid:1000104;
     rev:1;
 )
 
 # 1000105 - ARP Spoofing Detected
-alert arp any any -> 192.168.2.0/24 any (
+alert arp any any -> $HOME_NET any (
     msg:"ARP Spoofing Detected";
     sid:1000105;
     rev:1;
 )
 
 # 1000106 - Ping of Death Detected
-drop icmp any any -> 192.168.2.0/24 any (
+drop icmp any any -> $HOME_NET any (
     msg:"Ping of Death Detected";
     icode:0;
     itype:8;
@@ -154,7 +154,7 @@ drop tcp any any -> any 22 (
 # ---------------------------------------------------------
 
 # 1000100 - ICMP Ping Allowed
-pass icmp any any -> 192.168.2.0/24 any (
+pass icmp any any -> $HOME_NET any (
     msg:"ICMP Ping Allowed";
     itype:8;
     sid:1000100;
